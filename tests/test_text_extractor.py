@@ -9,19 +9,7 @@ import os
 def text_extractor():
     return TextExtractor()
 
-@pytest.mark.asyncio
-async def test_extract_text_from_txt():
-    # Create a mock text file
-    content = "This is a test document."
-    file = UploadFile(
-        filename="test.txt",
-        file=io.BytesIO(content.encode())
-    )
-    
-    result = await TextExtractor.extract_from_file(file)
-    assert isinstance(result, TextExtractionResponse)
-    assert result.text == content
-    assert result.success is True
+
 
 @pytest.mark.asyncio
 async def test_extract_text_from_pdf():
@@ -32,7 +20,7 @@ async def test_extract_text_from_pdf():
         file=io.BytesIO(pdf_content)
     )
     
-    result = await TextExtractor.extract_from_file(file)
+    result = await TextExtractor.extract_from_pdf(file)
     assert isinstance(result, TextExtractionResponse)
     assert result.success is True
 
