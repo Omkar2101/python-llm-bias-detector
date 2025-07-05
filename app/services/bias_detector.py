@@ -22,7 +22,8 @@ class BiasDetector:
         self.problematic_phrases = {
             'gender_bias': [
                 'male preferred', 'females need not apply', 'masculine presence',
-                'male salesperson', 'female salesperson', 'guys', 'brotherhood'
+                'male salesperson', 'female salesperson', 'guys', 'brotherhood',
+                'male', 'female', 'masculine', 'feminine'
             ],
             'race_bias': [
                 'european descent', 'caucasian background', 'classic american look',
@@ -30,7 +31,8 @@ class BiasDetector:
             ],
             'age_bias': [
                 'young and energetic', 'recent graduate', 'digital native',
-                'fresh thinking', 'up-and-coming', 'mature', 'experienced professional'
+                'fresh thinking', 'up-and-coming', 'mature', 'experienced professional',
+                'young', 'energetic', 'graduates', 'recent grad'
             ],
             'cultural_bias': [
                 'native english speaker', 'american accent', 'u.s.-born',
