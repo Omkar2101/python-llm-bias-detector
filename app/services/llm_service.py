@@ -21,12 +21,11 @@ class LLMService:
         3. Racial/cultural bias (cultural assumptions or requirements)
         4. Disability bias (unnecessary physical requirements)
         5. Socioeconomic bias (class-based assumptions)
-        6.calculate the bias score using python and add it in the json response that is below=> bias_score
         
         Job Description:
         {text}
         
-        Return ONLY a valid JSON response with the following structure (no additional text):
+        Return ONLY a valid JSON response with the following structure (no additional text and do not give code ):
         {{
             "issues": [
                 {{
@@ -56,12 +55,15 @@ class LLMService:
             
             # Clean the response text to extract JSON
             response_text = response.text.strip()
+            # print(f"Raw Gemini response: {response_text}")
             
             # Remove any markdown formatting if present
             if response_text.startswith('```json'):
                 response_text = response_text[7:]
             if response_text.endswith('```'):
                 response_text = response_text[:-3]
+
+            print(f"Cleaned response text: {response_text}")
             
             result = json.loads(response_text)
             print(f"Cleaned result from detect bias function: {result}")

@@ -81,7 +81,7 @@ class BiasDetector:
         suggestions = self._parse_llm_suggestions(llm_improvement_result.get('suggestions', []))
         
         # Calculate scores
-        bias_score = llm_bias_result.get('bias_score', self._calculate_bias_score(text))
+        bias_score = llm_bias_result.get('bias_score')
         clarity_score = llm_improvement_result.get('clarity_score', self._calculate_clarity_score(text))
         inclusivity_score = llm_improvement_result.get('inclusivity_score', self._calculate_inclusivity_score(text))
         
