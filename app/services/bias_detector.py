@@ -80,6 +80,7 @@ class BiasDetector:
         # Parse suggestions
         suggestions = self._parse_llm_suggestions(llm_improvement_result.get('suggestions', []))
         
+        # get method to get values from llm_improvement_result or llm_bias_result as they are in json format
         # Calculate scores
         bias_score = llm_bias_result.get('bias_score')
         clarity_score = llm_improvement_result.get('clarity_score', self._calculate_clarity_score(text))
