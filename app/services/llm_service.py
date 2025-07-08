@@ -21,12 +21,12 @@ class LLMService:
         3. Racial/cultural bias (cultural assumptions or requirements)
         4. Disability bias (unnecessary physical requirements)
         5. Socioeconomic bias (class-based assumptions)
-        6.calculate the bias score using python and add it in the json response that is below=> bias_score
+        
         
         Job Description:
         {text}
         
-        Return ONLY a valid JSON response with the following structure (no additional text):
+        Return ONLY a valid JSON response with the following structure (no additional text and do not give code):
         {{
             "issues": [
                 {{
@@ -38,7 +38,7 @@ class LLMService:
                     "explanation": "why this is problematic"
                 }}
             ],
-            "bias_score": calculate using python and put the float value here only,
+            "bias_score": calculate using python and put A single float value between 0 and 1, where 0 means no bias and 1 means very high bias. Normalize this based on the number and severity of issues found. Keep this value realistic and consistent with the number and severity of issues,
             "overall_assessment": "summary of bias findings"
         }}
         """
