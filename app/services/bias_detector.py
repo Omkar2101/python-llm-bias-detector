@@ -269,16 +269,16 @@ class BiasDetector:
         return min(1.0, inclusivity_score)
     
 
-    def _calculate_bias_score(self, text: str) -> float:
-        """Calculate bias score based on detected issues"""
-        try:
-            issues = self._detect_rule_based_bias(text)
-            if not issues:
-                return 0.0
-            # Simple scoring: 1 point for each issue, weighted by severity
-            score = sum(1.0 if issue.severity == SeverityLevel.LOW else 2.0 if issue.severity == SeverityLevel.MEDIUM else 3.0 for issue in issues)
-            return min(1.0, score / 10.0)
-        except Exception as e:
-            print(f"Error calculating bias score: {e}")
-            return 0.5
+    # def _calculate_bias_score(self, text: str) -> float:
+    #     """Calculate bias score based on detected issues"""
+    #     try:
+    #         issues = self._detect_rule_based_bias(text)
+    #         if not issues:
+    #             return 0.0
+    #         # Simple scoring: 1 point for each issue, weighted by severity
+    #         score = sum(1.0 if issue.severity == SeverityLevel.LOW else 2.0 if issue.severity == SeverityLevel.MEDIUM else 3.0 for issue in issues)
+    #         return min(1.0, score / 10.0)
+    #     except Exception as e:
+    #         print(f"Error calculating bias score: {e}")
+    #         return 0.5
     
