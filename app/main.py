@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.models.schemas import AnalyzeRequest, BiasAnalysisResult, TextExtractionResponse
+from app.models.schemas import AnalyzeRequest, BiasAnalysisResult, TextExtractionResponse,AnalyzeFileResponse
 from app.services.text_extractor import TextExtractor
 from app.services.bias_detector import BiasDetector
 import os
@@ -187,10 +187,14 @@ async def analyze_uploaded_file(file: UploadFile = File(...)):
 
         print(f"Analysis result from /analyze-file: {analysis_result}")  # Debug log
         
-        return {
-            "extracted_text": extraction_result.extracted_text,
-            "analysis": analysis_result
-        }
+        # return {
+        #     "extracted_text": extraction_result.extracted_text,
+        #     "analysis": analysis_result
+        # }
+        return AnalyzeFileResponse(
+        extracted_text=extraction_result.extracted_text,
+        analysis=analysis_result
+    )
 
     except HTTPException:
         raise
