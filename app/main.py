@@ -5,6 +5,7 @@ from app.services.text_extractor import TextExtractor
 from app.services.bias_detector import BiasDetector
 import os
 from dotenv import load_dotenv
+from fastapi.responses import JSONResponse
 
 # Load environment variables
 load_dotenv()
@@ -149,7 +150,8 @@ async def analyze_bias(request: AnalyzeRequest):
 @app.post("/analyze-file")
 async def analyze_uploaded_file(file: UploadFile = File(...)):
     """Extract text from file and analyze for bias - convenience endpoint"""
-    
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
     try:
         # First extract text
         extraction_result = await extract_text_from_file(file)
