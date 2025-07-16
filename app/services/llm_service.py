@@ -3,12 +3,14 @@ import google.generativeai as genai
 from typing import List, Dict
 import json
 from app.models.schemas import BiasIssue, Suggestion, BiasType, SeverityLevel, CategoryType
+from fastapi import HTTPException
+import time
 
 class LLMService:
     def __init__(self):
         # Configure Google Gemini
         genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.0-flash')
     
     async def detect_bias(self, text: str) -> Dict:
         """Use Gemini to detect bias in job description"""
@@ -21,6 +23,7 @@ class LLMService:
         3. Racial/cultural bias (cultural assumptions or requirements)
         4. Disability bias (unnecessary physical requirements)
         5. Socioeconomic bias (class-based assumptions)
+        6.calculate bias_score using python and put A single float value between 0 and 1, where 0 means no bias and 1 means very high bias. Normalize this based on the number and severity of issues found. Keep this value realistic and consistent with the number and severity of issues. Put this value in below response in front of bias_score,
         
         
         Job Description:
@@ -38,7 +41,7 @@ class LLMService:
                     "explanation": "why this is problematic"
                 }}
             ],
-            "bias_score": calculate using python and put A single float value between 0 and 1, where 0 means no bias and 1 means very high bias. Normalize this based on the number and severity of issues found. Keep this value realistic and consistent with the number and severity of issues,
+            "bias_score":"bias_score",
             "overall_assessment": "summary of bias findings"
         }}
         """
@@ -67,21 +70,52 @@ class LLMService:
             print(f"Cleaned result from detect bias function: {result}")
             return result
             
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error in bias detection: {str(e)}")
-            print(f"Response text: {response.text if 'response' in locals() else 'No response'}")
-            return {
-                "issues": [],
-                "bias_score": 0.0,
-                "overall_assessment": "Error occurred during JSON parsing"
-            }
+        # except json.JSONDecodeError as e:
+        #     print(f"JSON decode error in bias detection: {str(e)}")
+        #     print(f"Response text: {response.text if 'response' in locals() else 'No response'}")
+        #     return {
+        #         "issues": [],
+        #         "bias_score": 0.0,
+        #         "overall_assessment": "Error occurred during JSON parsing"
+        #     }
+        # except Exception as e:
+        #     print(f"Error in bias detection: {str(e)}")
+        #     return {
+        #         "issues": [],
+        #         "bias_score": 0.0,
+        #         "overall_assessment": "Error occurred during analysis"
+        #     }
+
         except Exception as e:
-            print(f"Error in bias detection: {str(e)}")
-            return {
-                "issues": [],
-                "bias_score": 0.0,
-                "overall_assessment": "Error occurred during analysis"
-            }
+            error_msg = str(e)
+            print(f"Error in bias detection: {error_msg}")
+            
+            # Check for specific Gemini API errors
+            if "503" in error_msg or "overloaded" in error_msg.lower():
+                raise HTTPException(
+                    status_code=503,
+                    detail="AI service is temporarily overloaded. Please try again in a few moments."
+                )
+            elif "timeout" in error_msg.lower() or "exceeded" in error_msg.lower():
+                raise HTTPException(
+                    status_code=504,
+                    detail="Request timed out. The AI service is taking longer than expected. Please try again."
+                )
+            elif "quota" in error_msg.lower() or "limit" in error_msg.lower():
+                raise HTTPException(
+                    status_code=429,
+                    detail="API quota exceeded. Please try again later."
+                )
+            elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+                raise HTTPException(
+                    status_code=500,
+                    detail="Service configuration error. Please contact support."
+                )
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"AI analysis failed: {error_msg}"
+                )
     
     async def improve_language(self, text: str) -> Dict:
         """Use Gemini to suggest language improvements"""
@@ -147,22 +181,53 @@ class LLMService:
             # print(f"Cleaned result: {result}")
             return result
             
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error in language improvement: {str(e)}")
-            print(f"Response text: {response.text if 'response' in locals() else 'No response'}")
-            return {
-                "suggestions": [],
-                "improved_text": text,
-                "clarity_score": 0.5,
-                "inclusivity_score": 0.5,
-                "seo_keywords": []
-            }
+        # except json.JSONDecodeError as e:
+        #     print(f"JSON decode error in language improvement: {str(e)}")
+        #     print(f"Response text: {response.text if 'response' in locals() else 'No response'}")
+        #     return {
+        #         "suggestions": [],
+        #         "improved_text": text,
+        #         "clarity_score": 0.5,
+        #         "inclusivity_score": 0.5,
+        #         "seo_keywords": []
+        #     }
+        # except Exception as e:
+        #     print(f"Error in language improvement: {str(e)}")
+        #     return {
+        #         "suggestions": [],
+        #         "improved_text": text,
+        #         "clarity_score": 0.5,
+        #         "inclusivity_score": 0.5,
+        #         "seo_keywords": []
+        #     }
+
         except Exception as e:
-            print(f"Error in language improvement: {str(e)}")
-            return {
-                "suggestions": [],
-                "improved_text": text,
-                "clarity_score": 0.5,
-                "inclusivity_score": 0.5,
-                "seo_keywords": []
-            }
+            error_msg = str(e)
+            print(f"Error in language improvement: {error_msg}")
+            
+            # Check for specific Gemini API errors
+            if "503" in error_msg or "overloaded" in error_msg.lower():
+                raise HTTPException(
+                    status_code=503,
+                    detail="AI service is temporarily overloaded. Please try again in a few moments."
+                )
+            elif "timeout" in error_msg.lower() or "exceeded" in error_msg.lower():
+                raise HTTPException(
+                    status_code=504,
+                    detail="Request timed out. The AI service is taking longer than expected. Please try again."
+                )
+            elif "quota" in error_msg.lower() or "limit" in error_msg.lower():
+                raise HTTPException(
+                    status_code=429,
+                    detail="API quota exceeded. Please try again later."
+                )
+            elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+                raise HTTPException(
+                    status_code=500,
+                    detail="Service configuration error. Please contact support."
+                )
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"AI analysis failed: {error_msg}"
+                )

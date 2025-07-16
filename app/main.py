@@ -28,6 +28,47 @@ app.add_middleware(
 text_extractor = TextExtractor()
 bias_detector = BiasDetector()
 
+
+# Global exception handler for HTTPException
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": True,
+            "message": exc.detail,
+            "status_code": exc.status_code,
+            "type": get_error_type(exc.status_code)
+        }
+    )
+
+# Global exception handler for general exceptions
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": True,
+            "message": "An unexpected error occurred. Please try again later.",
+            "status_code": 500,
+            "type": "internal_server_error"
+        }
+    )
+
+def get_error_type(status_code: int) -> str:
+    """Get user-friendly error type based on status code"""
+    error_types = {
+        400: "validation_error",
+        401: "authentication_error",
+        403: "permission_error",
+        404: "not_found_error",
+        413: "file_too_large",
+        429: "rate_limit_exceeded",
+        500: "internal_server_error",
+        503: "service_unavailable",
+        504: "timeout_error"
+    }
+    return error_types.get(status_code, "unknown_error")
 @app.get("/")
 async def root():
     return {"message": "Job Description Bias Detection API", "status": "running"}
@@ -95,8 +136,11 @@ async def extract_text_from_file(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        print(f"Unexpected error during text extraction: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="Text extraction failed due to an internal error"
+        )
 
 @app.post("/analyze", response_model=BiasAnalysisResult)
 async def analyze_bias(request: AnalyzeRequest):
@@ -111,30 +155,51 @@ async def analyze_bias(request: AnalyzeRequest):
     try:
         result = await bias_detector.analyze_comprehensive(request.text)
         print(f"Analysis result going from /analyze: {result}")  # Debug log
+        # Debug logging for the final result
+        print(f"DEBUG: Final result type: {type(result)}")
+        print(f"DEBUG: Final result has overall_assessment: {hasattr(result, 'overall_assessment')}")
+        print(f"DEBUG: Final result.overall_assessment: {getattr(result, 'overall_assessment', 'NOT_FOUND')}")
+
+        
+
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        print(f"Unexpected error during bias analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="Bias analysis failed due to an internal error"
+        )
 
 @app.post("/analyze-file")
 async def analyze_uploaded_file(file: UploadFile = File(...)):
     """Extract text from file and analyze for bias - convenience endpoint"""
     
-    # First extract text
-    extraction_result = await extract_text_from_file(file)
-    
-    if not extraction_result.success:
-        raise HTTPException(status_code=400, detail=extraction_result.error_message)
-    
-    # Then analyze the extracted text
-    analysis_request = AnalyzeRequest(text=extraction_result.extracted_text)
-    analysis_result = await analyze_bias(analysis_request)
+    try:
+        # First extract text
+        extraction_result = await extract_text_from_file(file)
+        
+        if not extraction_result.success:
+            raise HTTPException(status_code=400, detail=extraction_result.error_message)
+        
+        # Then analyze the extracted text
+        analysis_request = AnalyzeRequest(text=extraction_result.extracted_text)
+        analysis_result = await analyze_bias(analysis_request)
 
-    print(f"Analysis result from /analyze-file: {analysis_result}")  # Debug log
-    
-    return {
-        "extracted_text": extraction_result.extracted_text,
-        "analysis": analysis_result
-    }
+        print(f"Analysis result from /analyze-file: {analysis_result}")  # Debug log
+        
+        return {
+            "extracted_text": extraction_result.extracted_text,
+            "analysis": analysis_result
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Unexpected error during file analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail="File analysis failed due to an internal error"
+        )
 
 if __name__ == "__main__":
     import uvicorn

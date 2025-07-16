@@ -48,6 +48,7 @@ class BiasAnalysisResult(BaseModel):
     suggestions: List[Suggestion]
     seo_keywords: List[str]
     improved_text: Optional[str] = None
+    overall_assessment: Optional[str] = None
 
 class AnalyzeRequest(BaseModel):
     text: str
