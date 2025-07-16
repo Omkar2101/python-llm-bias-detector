@@ -2,10 +2,10 @@ import os
 import io
 from typing import Optional
 import easyocr
-import PyPDF2
+# import PyPDF2
+from pypdf import PdfReader
 from docx import Document
 from PIL import Image
-import pytesseract
 import numpy as np
 from fastapi import UploadFile
 from app.models.schemas import TextExtractionResponse
@@ -84,7 +84,7 @@ class TextExtractor:
     @staticmethod
     def _extract_from_pdf(content: bytes) -> str:
         """Extract text from PDF content"""
-        pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+        pdf_reader = PdfReader(io.BytesIO(content))
         text = ""
         for page in pdf_reader.pages:
             text += page.extract_text() + "\n"
