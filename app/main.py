@@ -77,31 +77,7 @@ async def root():
 async def health_check():
     return {"status": "healthy", "service": "python-llm-bias-detector"}
 
-# @app.post("/extract-text", response_model=TextExtractionResponse)
-# async def extract_text_from_file(file: UploadFile = File(...)):
-#     """Extract text from uploaded file (PDF, DOCX, images, etc.)"""
-    
-#     if not file.filename:
-#         raise HTTPException(status_code=400, detail="No file provided")
-    
-#     # Check file size (10MB limit)
-#     file_size = 0
-#     content = await file.read()
-#     file_size = len(content)
-#     print(f"Uploaded file size: {file_size} bytes") # Debug log checkpoint 1 done
-    
-#     if file_size > 10 * 1024 * 1024:  # 10MB
-#         raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB")
-    
-#     # Reset file pointer
-#     await file.seek(0)
-    
-#     result = await text_extractor.extract_from_file(file)
-    
-#     if not result.success:
-#         raise HTTPException(status_code=400, detail=result.error_message)
-    
-#     return result
+
 
 @app.post("/extract", response_model=TextExtractionResponse)
 async def extract_text_from_file(file: UploadFile = File(...)):
@@ -187,10 +163,7 @@ async def analyze_uploaded_file(file: UploadFile = File(...)):
 
         print(f"Analysis result from /analyze-file: {analysis_result}")  # Debug log
         
-        # return {
-        #     "extracted_text": extraction_result.extracted_text,
-        #     "analysis": analysis_result
-        # }
+       
         return AnalyzeFileResponse(
         extracted_text=extraction_result.extracted_text,
         analysis=analysis_result
