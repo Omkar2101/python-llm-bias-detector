@@ -54,7 +54,12 @@ class AnalyzeRequest(BaseModel):
     text: str
 
 class TextExtractionResponse(BaseModel):
-    success: bool
+    success: bool 
     extracted_text: Optional[str] = None
     file_type: Optional[str] = None
     error_message: Optional[str] = None
+
+
+class AnalyzeFileResponse(BaseModel):
+    extracted_text: str
+    analysis: BiasAnalysisResult
