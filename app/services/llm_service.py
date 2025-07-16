@@ -70,21 +70,7 @@ class LLMService:
             print(f"Cleaned result from detect bias function: {result}")
             return result
             
-        # except json.JSONDecodeError as e:
-        #     print(f"JSON decode error in bias detection: {str(e)}")
-        #     print(f"Response text: {response.text if 'response' in locals() else 'No response'}")
-        #     return {
-        #         "issues": [],
-        #         "bias_score": 0.0,
-        #         "overall_assessment": "Error occurred during JSON parsing"
-        #     }
-        # except Exception as e:
-        #     print(f"Error in bias detection: {str(e)}")
-        #     return {
-        #         "issues": [],
-        #         "bias_score": 0.0,
-        #         "overall_assessment": "Error occurred during analysis"
-        #     }
+     
 
         except Exception as e:
             error_msg = str(e)
@@ -96,16 +82,17 @@ class LLMService:
                     status_code=503,
                     detail="AI service is temporarily overloaded. Please try again in a few moments."
                 )
-            elif "timeout" in error_msg.lower() or "exceeded" in error_msg.lower():
-                raise HTTPException(
-                    status_code=504,
-                    detail="Request timed out. The AI service is taking longer than expected. Please try again."
-                )
             elif "quota" in error_msg.lower() or "limit" in error_msg.lower():
                 raise HTTPException(
                     status_code=429,
                     detail="API quota exceeded. Please try again later."
                 )
+            elif "timeout" in error_msg.lower() or "exceeded" in error_msg.lower():
+                raise HTTPException(
+                    status_code=504,
+                    detail="Request timed out. The AI service is taking longer than expected. Please try again."
+                )
+           
             elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
                 raise HTTPException(
                     status_code=500,
@@ -181,25 +168,7 @@ class LLMService:
             # print(f"Cleaned result: {result}")
             return result
             
-        # except json.JSONDecodeError as e:
-        #     print(f"JSON decode error in language improvement: {str(e)}")
-        #     print(f"Response text: {response.text if 'response' in locals() else 'No response'}")
-        #     return {
-        #         "suggestions": [],
-        #         "improved_text": text,
-        #         "clarity_score": 0.5,
-        #         "inclusivity_score": 0.5,
-        #         "seo_keywords": []
-        #     }
-        # except Exception as e:
-        #     print(f"Error in language improvement: {str(e)}")
-        #     return {
-        #         "suggestions": [],
-        #         "improved_text": text,
-        #         "clarity_score": 0.5,
-        #         "inclusivity_score": 0.5,
-        #         "seo_keywords": []
-        #     }
+       
 
         except Exception as e:
             error_msg = str(e)
@@ -211,16 +180,17 @@ class LLMService:
                     status_code=503,
                     detail="AI service is temporarily overloaded. Please try again in a few moments."
                 )
-            elif "timeout" in error_msg.lower() or "exceeded" in error_msg.lower():
-                raise HTTPException(
-                    status_code=504,
-                    detail="Request timed out. The AI service is taking longer than expected. Please try again."
-                )
             elif "quota" in error_msg.lower() or "limit" in error_msg.lower():
                 raise HTTPException(
                     status_code=429,
                     detail="API quota exceeded. Please try again later."
                 )
+            elif "timeout" in error_msg.lower() or "exceeded" in error_msg.lower():
+                raise HTTPException(
+                    status_code=504,
+                    detail="Request timed out. The AI service is taking longer than expected. Please try again."
+                )
+            
             elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
                 raise HTTPException(
                     status_code=500,
