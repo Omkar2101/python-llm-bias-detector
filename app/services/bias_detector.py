@@ -53,7 +53,7 @@ class BiasDetector:
         try:
             # Get LLM analysis for bias detection
             llm_bias_result = await self.llm_service.detect_bias(text)
-            print(f"IMMEDIATE CHECK - overall_assessment exists: {'overall_assessment' in llm_bias_result}")
+            # print(f"IMMEDIATE CHECK - overall_assessment exists: {'overall_assessment' in llm_bias_result}")
             print(f"IMMEDIATE CHECK - overall_assessment value: {llm_bias_result.get('overall_assessment', 'NOT_FOUND')}")
             print(f"LLM bias result: {llm_bias_result}")  # Debug log
 
@@ -94,8 +94,24 @@ class BiasDetector:
             except (ValueError, TypeError):
                 bias_score = 0.5
 
-        clarity_score = llm_improvement_result.get('clarity_score', self._calculate_clarity_score(text))
-        inclusivity_score = llm_improvement_result.get('inclusivity_score', self._calculate_inclusivity_score(text))
+        # clarity_score = llm_improvement_result.get( self._calculate_clarity_score(text))
+        clarity_score = llm_improvement_result.get('clarity_score')
+        if isinstance(clarity_score, str):
+            try:
+                clarity_score = float(clarity_score)
+            except (ValueError, TypeError):
+                clarity_score = 0.5
+
+        
+        # inclusivity_score = llm_improvement_result.get( self._calculate_inclusivity_score(text))
+        inclusivity_score = llm_improvement_result.get('inclusivity_score')
+        if isinstance(inclusivity_score, str):
+            try:
+                inclusivity_score = float(inclusivity_score)
+            except (ValueError, TypeError):
+                inclusivity_score = 0.5
+
+
         # Get overall assessment
         overall_assessment = llm_bias_result.get('overall_assessment')
         print(f"overall_assessment: {overall_assessment}")
@@ -250,54 +266,5 @@ class BiasDetector:
         }
         return mapping.get(category, BiasType.GENDER)
         
-    def _calculate_clarity_score(self, text: str) -> float:
-        """Calculate clarity score based on readability metrics"""
-        try:
-            # Use Flesch Reading Ease score
-            flesch_score = textstat.flesch_reading_ease(text)
-            # Convert to 0-1 scale (higher is better)
-            clarity_score = min(1.0, max(0.0, flesch_score / 100))
-            return clarity_score
-        except:
-            return 0.5  # Default score
-    
-    def _calculate_inclusivity_score(self, text: str) -> float:
-        """Calculate inclusivity score based on bias detection"""
-        text_lower = text.lower()
-        total_bias_words = 0
-        
-        # Count gender-coded words
-        for words in self.gender_coded_words.values():
-            for word in words:
-                if word in text_lower:
-                    total_bias_words += 1
-        
-        # Count problematic phrases
-        for phrases in self.problematic_phrases.values():
-            for phrase in phrases:
-                if phrase in text_lower:
-                    total_bias_words += 2  # Weight problematic phrases more
-        
-        # Calculate score (fewer bias words = higher score)
-        word_count = len(text.split())
-        if word_count == 0:
-            return 0.5
-        
-        bias_ratio = total_bias_words / word_count
-        inclusivity_score = max(0.0, 1.0 - (bias_ratio * 10))  # Scale the penalty
-        return min(1.0, inclusivity_score)
-    
-
-    def _calculate_bias_score(self, text: str) -> float:
-        """Calculate bias score based on detected issues"""
-        try:
-            issues = self._detect_rule_based_bias(text)
-            if not issues:
-                return 0.0
-            # Simple scoring: 1 point for each issue, weighted by severity
-            score = sum(1.0 if issue.severity == SeverityLevel.LOW else 2.0 if issue.severity == SeverityLevel.MEDIUM else 3.0 for issue in issues)
-            return min(1.0, score / 10.0)
-        except Exception as e:
-            print(f"Error calculating bias score: {e}")
-            return 0.5
+   
     
