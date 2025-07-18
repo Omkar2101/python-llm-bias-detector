@@ -60,6 +60,8 @@ class TextExtractor:
                 extracted_text = self._extract_from_image(content)
             elif file_ext == 'pdf':
                 extracted_text = self._extract_from_pdf(content)
+            elif file_ext == 'txt':  # Add this line
+                extracted_text = self._extract_from_txt(content)
             elif file_ext in ['docx', 'doc']:
                 extracted_text = self._extract_from_docx(content)
                 print(f"Extracted text from DOCX: {extracted_text[:100]}...")  # Debug log here is allright
@@ -99,6 +101,22 @@ class TextExtractor:
             text += paragraph.text + "\n"
         return text.strip()
     
+    @staticmethod
+    def _extract_from_txt(content: bytes) -> str:
+        """Extract text from TXT content"""
+        try:
+            # Try UTF-8 first
+            text = content.decode('utf-8')
+        except UnicodeDecodeError:
+            try:
+                # Fallback to latin-1 if UTF-8 fails
+                text = content.decode('latin-1')
+            except UnicodeDecodeError:
+                # Final fallback to ignore errors
+                text = content.decode('utf-8', errors='ignore')
+        
+        return text.strip()
+
     def _extract_from_image(self, content: bytes) -> str:
         """Extract text from image using OCR"""
         try:
