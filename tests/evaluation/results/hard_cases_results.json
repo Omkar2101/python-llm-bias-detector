@@ -1,0 +1,188 @@
+{
+  "timestamp": "2025-07-19T00:05:54.432428",
+  "overall_stats": {
+    "total_cases": 3,
+    "successful_evaluations": 3,
+    "passed_cases": 2,
+    "pass_rate": 0.6666666666666666,
+    "avg_bias_score_diff": 0.09999999999999999,
+    "avg_inclusivity_score_diff": 0.04999999999999997,
+    "avg_clarity_score_diff": 0.1166666666666667
+  },
+  "difficulty_stats": {
+    "hard": {
+      "total": 3,
+      "passed": 2,
+      "pass_rate": 0.6666666666666666
+    }
+  },
+  "individual_results": [
+    {
+      "test_case_id": "CC001",
+      "test_case_name": "Legitimate Physical Requirements",
+      "difficulty_level": "hard",
+      "description": "Physical requirements that are job-relevant, not discriminatory",
+      "expected_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.95,
+        "clarity_score": 0.9,
+        "issues_count": 0
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.95,
+        "clarity_score": 0.85,
+        "issues_count": 2
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.0,
+        "clarity_diff": 0.050000000000000044
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "strong",
+          "severity": "medium",
+          "explanation": "'strong' is masculine-coded language that may discourage diverse applicants"
+        },
+        {
+          "type": "gender",
+          "text": "interpersonal",
+          "severity": "medium",
+          "explanation": "'interpersonal' is feminine-coded language that may discourage diverse applicants"
+        }
+      ],
+      "overall_assessment": "The job description appears to be generally free of bias. The requirements listed are directly related to the core functions of a physical therapist, including physical capabilities, communication skills, and professional qualifications.",
+      "passed": true
+    },
+    {
+      "test_case_id": "CC002",
+      "test_case_name": "Language Teacher Requirements",
+      "difficulty_level": "hard",
+      "description": "Language requirements that are job-relevant",
+      "expected_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.95,
+        "clarity_score": 0.9,
+        "issues_count": 0
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.85,
+        "clarity_score": 0.85,
+        "issues_count": 0
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.09999999999999998,
+        "clarity_diff": 0.050000000000000044
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [],
+      "overall_assessment": "The job description appears to be largely free of bias. The requirements for Hindi fluency, English fluency, and knowledge of Indian culture are all directly related to the core functions of the role. Teaching experience is a reasonable preference. The requirement to conduct classes in Hindi is also job-relevant.",
+      "passed": true
+    },
+    {
+      "test_case_id": "CC003",
+      "test_case_name": "Ambiguous Requirements",
+      "difficulty_level": "hard",
+      "description": "Ambiguous language that could be interpreted as biased",
+      "expected_scores": {
+        "bias_score": 0.2,
+        "inclusivity_score": 0.8,
+        "clarity_score": 0.6,
+        "issues_count": 2
+      },
+      "actual_scores": {
+        "bias_score": 0.5,
+        "inclusivity_score": 0.85,
+        "clarity_score": 0.85,
+        "issues_count": 9
+      },
+      "score_differences": {
+        "bias_diff": 0.3,
+        "inclusivity_diff": 0.04999999999999993,
+        "clarity_diff": 0.25
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": false,
+        "expected_types_found": false
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "people person",
+          "severity": "low",
+          "explanation": "While seemingly innocuous, the term 'people person' can subtly favor candidates who exhibit traditionally feminine-coded traits like empathy and sociability, potentially excluding qualified candidates who may express these traits differently or identify as male. It's better to specify the required skills, such as 'excellent communication skills' or 'strong interpersonal skills'."
+        },
+        {
+          "type": "socioeconomic",
+          "text": "presentable",
+          "severity": "medium",
+          "explanation": "The term 'presentable' is subjective and can be influenced by socioeconomic factors. What is considered 'presentable' may vary based on cultural norms and financial resources. This could unintentionally discriminate against candidates who may not have the means to afford certain types of clothing or grooming."
+        },
+        {
+          "type": "gender",
+          "text": "pleasant personality",
+          "severity": "low",
+          "explanation": "The term 'pleasant personality' is subjective and can be influenced by gender stereotypes. It may unintentionally favor candidates who exhibit traditionally feminine-coded traits like agreeableness and warmth. It's better to specify the required behaviors, such as 'positive and respectful communication'."
+        },
+        {
+          "type": "cultural",
+          "text": "naturally connects with people",
+          "severity": "low",
+          "explanation": "The phrase 'naturally connects with people' assumes a certain level of extroversion and ease in social situations, which may not be universally valued or expressed across different cultures. Some individuals may require more time or different approaches to build rapport, which doesn't necessarily diminish their ability to perform the job effectively."
+        },
+        {
+          "type": "cultural",
+          "text": "Team player mentality",
+          "severity": "low",
+          "explanation": "The phrase 'Team player mentality' assumes a certain level of collectivism and collaboration, which may not be universally valued or expressed across different cultures. Some individuals may prefer to work independently or have different approaches to teamwork, which doesn't necessarily diminish their ability to perform the job effectively."
+        },
+        {
+          "type": "gender",
+          "text": "strong",
+          "severity": "medium",
+          "explanation": "'strong' is masculine-coded language that may discourage diverse applicants"
+        },
+        {
+          "type": "gender",
+          "text": "interpersonal",
+          "severity": "medium",
+          "explanation": "'interpersonal' is feminine-coded language that may discourage diverse applicants"
+        },
+        {
+          "type": "gender",
+          "text": "pleasant",
+          "severity": "medium",
+          "explanation": "'pleasant' is feminine-coded language that may discourage diverse applicants"
+        },
+        {
+          "type": "gender",
+          "text": "team player",
+          "severity": "medium",
+          "explanation": "'team player' is feminine-coded language that may discourage diverse applicants"
+        }
+      ],
+      "overall_assessment": "The job description contains several instances of subtle bias, primarily related to gender and socioeconomic status. The use of subjective terms like 'people person,' 'presentable,' and 'pleasant personality' can lead to unintentional discrimination. While the core requirements of strong interpersonal skills, a positive attitude, and the ability to remain calm under pressure are relevant for a Customer Service Representative, the phrasing should be more specific and objective to avoid bias.",
+      "passed": false
+    }
+  ]
+}

@@ -5,9 +5,19 @@ import json
 from app.models.schemas import BiasIssue, Suggestion, BiasType, SeverityLevel, CategoryType
 from fastapi import HTTPException
 import time
+from dotenv import load_dotenv
 
 class LLMService:
     def __init__(self):
+
+        # Load environment variables from .env file
+        load_dotenv()  # Add this line
+
+        # Configure Google Gemini
+        api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GOOGLE_GEMINI_API_KEY not found in environment variables")
+
         # Configure Google Gemini
         genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
         self.model = genai.GenerativeModel('gemini-2.0-flash')
