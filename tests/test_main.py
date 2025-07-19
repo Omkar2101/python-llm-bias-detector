@@ -1,79 +1,4 @@
-# import pytest
-# from fastapi.testclient import TestClient
-# from app.main import app
-# import io
-# import os
 
-# @pytest.fixture
-# def client():
-#     return TestClient(app)
-
-# def test_root_endpoint(client):
-#     """Test the root endpoint returns correct welcome message"""
-#     response = client.get("/")
-#     assert response.status_code == 200
-#     assert response.json() == {
-#         "message": "Job Description Bias Detection API",
-#         "status": "running"
-#     }
-
-# def test_health_check(client):
-#     """Test the health check endpoint"""
-#     response = client.get("/health")
-#     assert response.status_code == 200
-#     assert response.json() == {
-#         "status": "healthy",
-#         "service": "python-llm-bias-detector"
-#     }
-
-# def test_extract_no_file(client):
-#     """Test /extract endpoint with no file"""
-#     response = client.post("/extract")
-#     assert response.status_code == 422  # FastAPI validation error
-
-# def test_extract_empty_file(client):
-#     """Test /extract endpoint with empty file"""
-#     files = {
-#         'file': ('empty.txt', b'', 'text/plain')
-#     }
-#     response = client.post("/extract", files=files)
-#     assert response.status_code == 400
-#     assert "Empty file provided" in response.json()["detail"]
-
-# def test_extract_large_file(client):
-#     """Test /extract endpoint with file larger than 10MB"""
-#     # Create a file slightly larger than 10MB
-#     large_content = b'x' * (10 * 1024 * 1024 + 1)
-#     files = {
-#         'file': ('large.txt', large_content, 'text/plain')
-#     }
-#     response = client.post("/extract", files=files)
-#     assert response.status_code == 413
-#     assert "File too large" in response.json()["detail"]
-
-
-
-# def test_extract_invalid_file_type(client):
-#     """Test /extract endpoint with unsupported file type"""
-#     files = {
-#         'file': ('test.xyz', b'some content', 'application/octet-stream')
-#     }
-#     response = client.post("/extract", files=files)
-#     assert response.status_code == 400
-#     # assert "Unsupported file type" in response.json()["detail"].lower()
-
-# # Commented out as these might need mocking or real PDF/DOCX files
-# # def test_extract_pdf_file(client):
-# #     """Test /extract endpoint with PDF file"""
-# #     pass
-
-# # def test_extract_docx_file(client):
-# #     """Test /extract endpoint with DOCX file"""
-# #     pass
-
-# # def test_extract_image_file(client):
-# #     """Test /extract endpoint with image file"""
-# #     pass
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch, AsyncMock
@@ -131,7 +56,6 @@ def test_extract_empty_file(client):
     }
     response = client.post("/extract", files=files)
     assert response.status_code == 400
-    # assert "Empty file provided" in response.json()["detail"]
     assert "Empty file provided" in response.json()["message"]
 
 
@@ -144,7 +68,6 @@ def test_extract_large_file(client):
     }
     response = client.post("/extract", files=files)
     assert response.status_code == 413
-    # assert "File too large"  in response.json() ["detail"]
     assert "File too large" in response.json()["message"]
 
 
@@ -193,7 +116,6 @@ def test_extract_failed_extraction(client, mock_text_extractor):
     response = client.post("/extract", files=files)
     
     assert response.status_code == 400
-    # assert "Unsupported file type: xyz" in response.json()["detail"]
     assert "Unsupported file type: xyz" in response.json()["message"]
 
 def test_extract_exception_handling(client, mock_text_extractor):
@@ -207,7 +129,6 @@ def test_extract_exception_handling(client, mock_text_extractor):
     response = client.post("/extract", files=files)
     
     assert response.status_code == 500
-    # assert "Text extraction failed due to an internal error" in response.json()["detail"]
     assert "Text extraction failed due to an internal error" in response.json()["message"]
 
 # Test /analyze endpoint
@@ -215,23 +136,23 @@ def test_analyze_empty_text(client):
     """Test /analyze endpoint with empty text"""
     response = client.post("/analyze", json={"text": ""})
     assert response.status_code == 400
-    # assert "must be at least 50 characters long" in response.json()["detail"]
     assert "must be at least 50 characters long" in response.json()["message"]
 
 def test_analyze_short_text(client):
     """Test /analyze endpoint with text shorter than 50 characters"""
     response = client.post("/analyze", json={"text": "Short text"})
     assert response.status_code == 400
-    # assert "must be at least 50 characters long" in response.json()["detail"]
     assert "must be at least 50 characters long" in response.json()["message"]
 
 def test_analyze_successful_analysis(client, mock_bias_detector):
     """Test successful bias analysis"""
-    # Create mock analysis result
+    # Create mock analysis result - updated to match schema
     mock_result = BiasAnalysisResult(
-        bias_score=0.3,
-        inclusivity_score=0.8,
-        clarity_score=0.9,
+        role="Software Developer",  # Added optional field
+        industry="Technology",      # Added optional field
+        bias_score=0.3,            # Can be str or float per schema
+        inclusivity_score=0.8,     # Can be str or float per schema
+        clarity_score=0.9,         # Can be str or float per schema
         issues=[
             BiasIssue(
                 type=BiasType.GENDER,
@@ -266,6 +187,8 @@ def test_analyze_successful_analysis(client, mock_bias_detector):
     assert data["bias_score"] == 0.3
     assert data["inclusivity_score"] == 0.8
     assert data["clarity_score"] == 0.9
+    assert data["role"] == "Software Developer"
+    assert data["industry"] == "Technology"
     assert len(data["issues"]) == 1
     assert data["issues"][0]["type"] == "gender"
     assert data["issues"][0]["text"] == "aggressive"
@@ -284,7 +207,6 @@ def test_analyze_exception_handling(client, mock_bias_detector):
     response = client.post("/analyze", json={"text": long_text})
     
     assert response.status_code == 500
-    # assert "Bias analysis failed due to an internal error" in response.json()["detail"]
     assert "Bias analysis failed due to an internal error" in response.json()["message"]
 
 # Test /analyze-file endpoint
@@ -297,8 +219,10 @@ def test_analyze_file_successful(client, mock_text_extractor, mock_bias_detector
         file_type="txt"
     ))
     
-    # Mock successful analysis
+    # Mock successful analysis - updated to match schema
     mock_result = BiasAnalysisResult(
+        role="Software Developer",
+        industry="Technology",
         bias_score=0.4,
         inclusivity_score=0.7,
         clarity_score=0.8,
@@ -320,6 +244,8 @@ def test_analyze_file_successful(client, mock_text_extractor, mock_bias_detector
     assert "extracted_text" in data
     assert "analysis" in data
     assert data["analysis"]["bias_score"] == 0.4
+    assert data["analysis"]["role"] == "Software Developer"
+    assert data["analysis"]["industry"] == "Technology"
 
 def test_analyze_file_extraction_failed(client, mock_text_extractor):
     """Test file analysis with failed extraction"""
@@ -335,7 +261,6 @@ def test_analyze_file_extraction_failed(client, mock_text_extractor):
     response = client.post("/analyze-file", files=files)
     
     assert response.status_code == 400
-    # assert "Unsupported file type" in response.json()["detail"]
     assert "Unsupported file type" in response.json()["message"]
 
 
@@ -410,6 +335,8 @@ def test_analyze_maximum_length_text(client, mock_bias_detector):
     long_text = "We are looking for a skilled software developer. " * 100  # 5000+ characters
     
     mock_result = BiasAnalysisResult(
+        role="Software Developer",
+        industry="Technology", 
         bias_score=0.1,
         inclusivity_score=0.9,
         clarity_score=0.8,
@@ -432,6 +359,8 @@ def test_analyze_special_characters(client, mock_bias_detector):
     special_text = "We are looking for a developer who can handle émojis 😊, unicode characters ñ, and special symbols @#$%^&*()!"
     
     mock_result = BiasAnalysisResult(
+        role="Developer",
+        industry="Technology",
         bias_score=0.0,
         inclusivity_score=1.0,
         clarity_score=0.7,
@@ -453,6 +382,8 @@ def test_analyze_special_characters(client, mock_bias_detector):
 def test_multiple_concurrent_requests(client, mock_bias_detector):
     """Test handling multiple requests"""
     mock_result = BiasAnalysisResult(
+        role="Software Developer",
+        industry="Technology",
         bias_score=0.2,
         inclusivity_score=0.8,
         clarity_score=0.9,
@@ -482,6 +413,8 @@ def test_multiple_concurrent_requests(client, mock_bias_detector):
 def test_analyze_response_structure(client, mock_bias_detector):
     """Test that analyze response has correct structure"""
     mock_result = BiasAnalysisResult(
+        role="Software Developer",
+        industry="Technology",
         bias_score=0.3,
         inclusivity_score=0.7,
         clarity_score=0.8,
@@ -499,24 +432,27 @@ def test_analyze_response_structure(client, mock_bias_detector):
     assert response.status_code == 200
     data = response.json()
     
-    # Check all required fields are present
+    # Check all required fields are present (including new optional ones)
     required_fields = [
         "bias_score", "inclusivity_score", "clarity_score", 
-        "issues", "suggestions", "seo_keywords", "improved_text", "overall_assessment"
+        "issues", "suggestions", "seo_keywords", "improved_text", 
+        "overall_assessment", "role", "industry"
     ]
     
     for field in required_fields:
         assert field in data
     
-    # Check data types
-    assert isinstance(data["bias_score"], (int, float))
-    assert isinstance(data["inclusivity_score"], (int, float))
-    assert isinstance(data["clarity_score"], (int, float))
+    # Check data types - updated for Union[str, float] scores
+    assert isinstance(data["bias_score"], (int, float, str))
+    assert isinstance(data["inclusivity_score"], (int, float, str))
+    assert isinstance(data["clarity_score"], (int, float, str))
     assert isinstance(data["issues"], list)
     assert isinstance(data["suggestions"], list)
     assert isinstance(data["seo_keywords"], list)
     assert isinstance(data["improved_text"], (str, type(None)))
     assert isinstance(data["overall_assessment"], (str, type(None)))
+    assert isinstance(data["role"], (str, type(None)))
+    assert isinstance(data["industry"], (str, type(None)))
 
 def test_extract_response_structure(client, mock_text_extractor):
     """Test that extract response has correct structure"""
@@ -564,3 +500,56 @@ def test_extract_file_at_size_limit(client, mock_text_extractor):
     
     # Should succeed as it's exactly at the limit
     assert response.status_code == 200
+
+# Test with scores as strings (since schema allows Union[str, float])
+def test_analyze_with_string_scores(client, mock_bias_detector):
+    """Test analysis result with string scores"""
+    mock_result = BiasAnalysisResult(
+        role="Software Developer",
+        industry="Technology",
+        bias_score="0.3",  # String instead of float
+        inclusivity_score="0.8",  # String instead of float
+        clarity_score="0.9",  # String instead of float
+        issues=[],
+        suggestions=[],
+        seo_keywords=["python", "developer"],
+        improved_text="Improved job description",
+        overall_assessment="Moderate bias detected."
+    )
+    mock_bias_detector.analyze_comprehensive = AsyncMock(return_value=mock_result)
+    
+    text = "We are looking for an aggressive software developer who can work independently."
+    response = client.post("/analyze", json={"text": text})
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["bias_score"] == "0.3"  # Should be string
+    assert data["inclusivity_score"] == "0.8"
+    assert data["clarity_score"] == "0.9"
+
+# Test with None optional fields
+def test_analyze_with_none_optional_fields(client, mock_bias_detector):
+    """Test analysis result with None optional fields"""
+    mock_result = BiasAnalysisResult(
+        role=None,  # Optional field as None
+        industry=None,  # Optional field as None
+        bias_score=0.2,
+        inclusivity_score=0.9,
+        clarity_score=0.8,
+        issues=[],
+        suggestions=[],
+        seo_keywords=[],
+        improved_text=None,  # Optional field as None
+        overall_assessment=None  # Optional field as None
+    )
+    mock_bias_detector.analyze_comprehensive = AsyncMock(return_value=mock_result)
+    
+    text = "We are looking for a skilled software developer who can work independently."
+    response = client.post("/analyze", json={"text": text})
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["role"] is None
+    assert data["industry"] is None
+    assert data["improved_text"] is None
+    assert data["overall_assessment"] is None

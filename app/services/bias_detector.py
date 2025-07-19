@@ -53,8 +53,7 @@ class BiasDetector:
         try:
             # Get LLM analysis for bias detection
             llm_bias_result = await self.llm_service.detect_bias(text)
-            # print(f"IMMEDIATE CHECK - overall_assessment exists: {'overall_assessment' in llm_bias_result}")
-            print(f"IMMEDIATE CHECK - overall_assessment value: {llm_bias_result.get('overall_assessment', 'NOT_FOUND')}")
+            
             print(f"LLM bias result: {llm_bias_result}")  # Debug log
 
             
@@ -70,8 +69,8 @@ class BiasDetector:
             print(f"Error in LLM improvement: {e}")
             llm_improvement_result = {
                 'suggestions': [], 
-                'clarity_score': 0.5, 
-                'inclusivity_score': 0.5,
+                'clarity_score': 0.0, 
+                'inclusivity_score': 0.0,
                 'seo_keywords': [],
                 'improved_text': None
             }
@@ -87,12 +86,12 @@ class BiasDetector:
         # Calculate scores
         # bias_score = llm_bias_result.get('bias_score')
            # Calculate scores - HANDLE STRING TO FLOAT CONVERSION
-        bias_score = llm_bias_result.get('bias_score', 0.5)
+        bias_score = llm_bias_result.get('bias_score')
         if isinstance(bias_score, str):
             try:
                 bias_score = float(bias_score)
             except (ValueError, TypeError):
-                bias_score = 0.5
+                bias_score = 0.0
 
         # clarity_score = llm_improvement_result.get( self._calculate_clarity_score(text))
         clarity_score = llm_improvement_result.get('clarity_score')
@@ -100,7 +99,7 @@ class BiasDetector:
             try:
                 clarity_score = float(clarity_score)
             except (ValueError, TypeError):
-                clarity_score = 0.5
+                clarity_score = 0.0
 
         
         # inclusivity_score = llm_improvement_result.get( self._calculate_inclusivity_score(text))
@@ -109,15 +108,21 @@ class BiasDetector:
             try:
                 inclusivity_score = float(inclusivity_score)
             except (ValueError, TypeError):
-                inclusivity_score = 0.5
+                inclusivity_score = 0.0
 
+        #Get the role 
+        role = llm_bias_result.get('role')
 
+        #Get he Industry
+        industry = llm_bias_result.get('industry')
         # Get overall assessment
         overall_assessment = llm_bias_result.get('overall_assessment')
         print(f"overall_assessment: {overall_assessment}")
       
         
         result=BiasAnalysisResult(
+            role=role,
+            industry=industry,
             bias_score=bias_score,
             inclusivity_score=inclusivity_score,
             clarity_score=clarity_score,

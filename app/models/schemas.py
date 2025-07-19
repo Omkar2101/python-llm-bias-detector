@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional,Union
 from enum import Enum
 
 class BiasType(str, Enum):
@@ -41,9 +41,14 @@ class Suggestion(BaseModel):
     category: CategoryType
 
 class BiasAnalysisResult(BaseModel):
-    bias_score: float
-    inclusivity_score: float
-    clarity_score: float
+    role:Optional[str] = None
+    industry: Optional[str] = None
+    # bias_score: float 
+    # inclusivity_score: float
+    # clarity_score: float
+    bias_score: Union[str, float]
+    inclusivity_score: Union[str, float]
+    clarity_score: Union[str, float]
     issues: List[BiasIssue]
     suggestions: List[Suggestion]
     seo_keywords: List[str]

@@ -31,7 +31,8 @@ class LLMService:
         IMPORTANT: Consider job-relevant requirements vs. discriminatory bias. Some requirements may be legitimate based on job function.
 
         **Job Context Analysis:**
-        First, identify the job role, industry, and core functions to determine what requirements are legitimate vs. potentially biased.
+        At first check that the job description is related to the perticular job role and industry.
+        Then, identify the job role, industry, and core functions to determine what requirements are legitimate vs. potentially biased.
 
         **Bias Categories to Analyze:**
         1. **Gender bias**: Masculine/feminine coded words not related to job function
@@ -94,7 +95,7 @@ class LLMService:
 
         Job Description:
         {text}
-
+        **If the provided text is related to a job description then do the following 
         **Analysis Instructions:**
         1. First identify the job role and its core requirements
         2. Evaluate each potential bias against job relevance
@@ -103,11 +104,10 @@ class LLMService:
 
         Return ONLY a valid JSON response with the following structure (no additional text):
         {{
-            "job_context": {{
-                "role": "identified job title/role",
-                "industry": "identified industry/sector",
-                "core_functions": ["list of main job functions"]
-            }},
+            
+            "role": "identified job title/role",
+            "industry": "identified industry/sector",
+            
             "issues": [
                 {{
                     "type": "gender|age|racial|cultural|disability|socioeconomic|language",
@@ -122,6 +122,19 @@ class LLMService:
             "bias_score": bias_score,
             "overall_assessment": "summary of bias findings considering job context",
             "legitimate_requirements": ["list of requirements that are job-relevant and not biased"]
+        }}
+        **If the provided text is not  related to a job description then do the following
+        Return ONLY a valid JSON response with the following structure (no additional text):
+        {{
+            
+            
+            "role": "N/A",
+            "industry": "N/A",
+            "issues": [],
+            "bias_score": "N/A",
+            "overall_assessment": "The provided text does not appear to be a job description and therefore cannot be analyzed for employment-related bias.",
+            "legitimate_requirements": "N/A"
+
         }}
         """
         
@@ -187,6 +200,7 @@ class LLMService:
         """Use Gemini to suggest language improvements"""
         
         improvement_prompt = f"""
+        **If the provided text is related to a job description then do the following**
         Improve the following job description for:
         1. Clarity and readability
         2. Inclusive language
@@ -251,6 +265,15 @@ class LLMService:
             "clarity_score": clarity_score,
             "inclusivity_score": inclusivity_score,
             "seo_keywords": ["keyword1", "keyword2"]
+        }}
+        **If the provided text is not related to a job description then do the following**
+        Return ONLY a valid JSON response (no additional text):
+        {{
+            "suggestions": []
+            "improved_text": "N/A",
+            "clarity_score": N/A,
+            "inclusivity_score": N/A,
+            "seo_keywords": []
         }}
         """
         

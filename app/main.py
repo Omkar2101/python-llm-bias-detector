@@ -132,10 +132,8 @@ async def analyze_bias(request: AnalyzeRequest):
     try:
         result = await bias_detector.analyze_comprehensive(request.text)
         print(f"Analysis result going from /analyze: {result}")  # Debug log
-        # Debug logging for the final result
-        print(f"DEBUG: Final result type: {type(result)}")
-        print(f"DEBUG: Final result has overall_assessment: {hasattr(result, 'overall_assessment')}")
-        print(f"DEBUG: Final result.overall_assessment: {getattr(result, 'overall_assessment', 'NOT_FOUND')}")
+       
+       
 
         
 

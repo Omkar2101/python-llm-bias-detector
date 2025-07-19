@@ -1,3 +1,4 @@
+
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 import json
@@ -46,6 +47,8 @@ class TestBiasDetection:
         # Mock response
         mock_response = Mock()
         mock_response.text = json.dumps({
+            "role": "Software Engineer",
+            "industry": "Technology",
             "issues": [
                 {
                     "type": "gender",
@@ -53,11 +56,13 @@ class TestBiasDetection:
                     "start_index": 10,
                     "end_index": 20,
                     "severity": "medium",
-                    "explanation": "Gender-coded language"
+                    "explanation": "Gender-coded language",
+                    "job_relevance": "This requirement is not necessary for software engineering tasks"
                 }
             ],
             "bias_score": "0.3",
-            "overall_assessment": "Low bias detected"
+            "overall_assessment": "Low bias detected",
+            "legitimate_requirements": ["Strong problem-solving skills", "Programming experience"]
         })
         
         with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
@@ -67,8 +72,13 @@ class TestBiasDetection:
             assert "issues" in result
             assert "bias_score" in result
             assert "overall_assessment" in result
+            assert "role" in result
+            assert "industry" in result
+            assert "legitimate_requirements" in result
             assert len(result["issues"]) == 1
             assert result["bias_score"] == "0.3"
+            assert result["role"] == "Software Engineer"
+            assert result["industry"] == "Technology"
     
     @pytest.mark.asyncio
     async def test_detect_bias_with_markdown_response(self, llm_service):
@@ -77,9 +87,12 @@ class TestBiasDetection:
         mock_response = Mock()
         mock_response.text = '''```json
         {
+            "role": "Data Analyst",
+            "industry": "Analytics",
             "issues": [],
             "bias_score": "0.1",
-            "overall_assessment": "No bias detected"
+            "overall_assessment": "No bias detected",
+            "legitimate_requirements": ["Statistical analysis skills", "Data visualization experience"]
         }
         ```'''
         
@@ -90,15 +103,20 @@ class TestBiasDetection:
             assert "issues" in result
             assert result["bias_score"] == "0.1"
             assert len(result["issues"]) == 0
+            assert result["role"] == "Data Analyst"
+            assert result["industry"] == "Analytics"
     
     @pytest.mark.asyncio
     async def test_detect_bias_empty_text(self, llm_service):
         """Test bias detection with empty text"""
         mock_response = Mock()
         mock_response.text = json.dumps({
+            "role": "N/A",
+            "industry": "N/A",
             "issues": [],
             "bias_score": "0.0",
-            "overall_assessment": "No content to analyze"
+            "overall_assessment": "No content to analyze",
+            "legitimate_requirements": []
         })
         
         with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
@@ -106,12 +124,16 @@ class TestBiasDetection:
             
             assert isinstance(result, dict)
             assert len(result["issues"]) == 0
+            assert result["role"] == "N/A"
+            assert result["industry"] == "N/A"
     
     @pytest.mark.asyncio
     async def test_detect_bias_multiple_issues(self, llm_service):
         """Test bias detection with multiple issues"""
         mock_response = Mock()
         mock_response.text = json.dumps({
+            "role": "Sales Representative", 
+            "industry": "Sales",
             "issues": [
                 {
                     "type": "gender",
@@ -119,7 +141,8 @@ class TestBiasDetection:
                     "start_index": 10,
                     "end_index": 20,
                     "severity": "medium",
-                    "explanation": "Gender-coded language"
+                    "explanation": "Gender-coded language",
+                    "job_relevance": "Aggressiveness is not required for effective sales"
                 },
                 {
                     "type": "age",
@@ -127,11 +150,13 @@ class TestBiasDetection:
                     "start_index": 30,
                     "end_index": 35,
                     "severity": "high",
-                    "explanation": "Age discrimination"
+                    "explanation": "Age discrimination",
+                    "job_relevance": "Age is not relevant to sales performance"
                 }
             ],
             "bias_score": "0.7",
-            "overall_assessment": "Multiple bias issues detected"
+            "overall_assessment": "Multiple bias issues detected",
+            "legitimate_requirements": ["Communication skills", "Customer service experience"]
         })
         
         with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
@@ -139,11 +164,35 @@ class TestBiasDetection:
             
             assert len(result["issues"]) == 2
             assert result["bias_score"] == "0.7"
+            assert result["role"] == "Sales Representative"
+            assert result["industry"] == "Sales"
             
             # Check issue types
             issue_types = [issue["type"] for issue in result["issues"]]
             assert "gender" in issue_types
             assert "age" in issue_types
+
+    @pytest.mark.asyncio
+    async def test_detect_bias_non_job_description(self, llm_service):
+        """Test bias detection with non-job description text"""
+        mock_response = Mock()
+        mock_response.text = json.dumps({
+            "role": "N/A",
+            "industry": "N/A", 
+            "issues": [],
+            "bias_score": "N/A",
+            "overall_assessment": "The provided text does not appear to be a job description and therefore cannot be analyzed for employment-related bias.",
+            "legitimate_requirements": "N/A"
+        })
+        
+        with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
+            result = await llm_service.detect_bias("This is just a random paragraph about weather.")
+            
+            assert result["role"] == "N/A"
+            assert result["industry"] == "N/A"
+            assert result["bias_score"] == "N/A"
+            assert result["legitimate_requirements"] == "N/A"
+            assert len(result["issues"]) == 0
 
 
 class TestLanguageImprovement:
@@ -236,6 +285,27 @@ class TestLanguageImprovement:
             categories = [suggestion["category"] for suggestion in result["suggestions"]]
             assert "inclusivity" in categories
             assert "bias" in categories
+
+    @pytest.mark.asyncio
+    async def test_improve_language_non_job_description(self, llm_service):
+        """Test language improvement with non-job description text"""
+        mock_response = Mock()
+        mock_response.text = json.dumps({
+            "suggestions": [],
+            "improved_text": "N/A",
+            "clarity_score": "N/A",
+            "inclusivity_score": "N/A",
+            "seo_keywords": []
+        })
+        
+        with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
+            result = await llm_service.improve_language("This is just a random paragraph about weather.")
+            
+            assert len(result["suggestions"]) == 0
+            assert result["improved_text"] == "N/A"
+            assert result["clarity_score"] == "N/A"
+            assert result["inclusivity_score"] == "N/A"
+            assert len(result["seo_keywords"]) == 0
 
 
 class TestErrorHandling:
@@ -339,9 +409,12 @@ class TestJSONResponseCleaning:
         mock_response = Mock()
         mock_response.text = '''```json
         {
+            "role": "Marketing Manager",
+            "industry": "Marketing",
             "issues": [],
             "bias_score": "0.1",
-            "overall_assessment": "Clean"
+            "overall_assessment": "Clean",
+            "legitimate_requirements": ["Marketing experience", "Communication skills"]
         }
         ```'''
         
@@ -351,6 +424,7 @@ class TestJSONResponseCleaning:
             assert isinstance(result, dict)
             assert "issues" in result
             assert result["bias_score"] == "0.1"
+            assert result["role"] == "Marketing Manager"
     
     @pytest.mark.asyncio
     async def test_clean_json_with_whitespace(self, llm_service):
@@ -359,9 +433,12 @@ class TestJSONResponseCleaning:
         mock_response.text = '''
         
         {
+            "role": "HR Specialist",
+            "industry": "Human Resources",
             "issues": [],
             "bias_score": "0.0",
-            "overall_assessment": "Clean"
+            "overall_assessment": "Clean",
+            "legitimate_requirements": ["HR certification", "Employee relations experience"]
         }
         
         '''
@@ -371,6 +448,7 @@ class TestJSONResponseCleaning:
             
             assert isinstance(result, dict)
             assert result["bias_score"] == "0.0"
+            assert result["role"] == "HR Specialist"
 
 
 class TestRealWorldScenarios:
@@ -387,9 +465,12 @@ class TestRealWorldScenarios:
         
         mock_response = Mock()
         mock_response.text = json.dumps({
+            "role": "Software Engineer",
+            "industry": "Technology",
             "issues": [],
             "bias_score": "0.1",
-            "overall_assessment": "Job description appears neutral with minimal bias"
+            "overall_assessment": "Job description appears neutral with minimal bias",
+            "legitimate_requirements": ["Strong problem-solving skills", "Fast-paced environment adaptability"]
         })
         
         with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
@@ -398,6 +479,8 @@ class TestRealWorldScenarios:
             assert isinstance(result, dict)
             assert float(result["bias_score"]) < 0.5  # Should be low bias
             assert len(result["issues"]) == 0
+            assert result["role"] == "Software Engineer"
+            assert result["industry"] == "Technology"
     
     @pytest.mark.asyncio
     async def test_biased_job_description_analysis(self, llm_service):
@@ -409,6 +492,8 @@ class TestRealWorldScenarios:
         
         mock_response = Mock()
         mock_response.text = json.dumps({
+            "role": "Salesperson",
+            "industry": "Sales", 
             "issues": [
                 {
                     "type": "gender",
@@ -416,7 +501,8 @@ class TestRealWorldScenarios:
                     "start_index": 20,
                     "end_index": 24,
                     "severity": "high",
-                    "explanation": "Gender-specific requirement"
+                    "explanation": "Gender-specific requirement",
+                    "job_relevance": "Gender is not relevant to sales performance"
                 },
                 {
                     "type": "age",
@@ -424,11 +510,13 @@ class TestRealWorldScenarios:
                     "start_index": 12,
                     "end_index": 17,
                     "severity": "high",
-                    "explanation": "Age discrimination"
+                    "explanation": "Age discrimination",
+                    "job_relevance": "Age is not relevant to sales ability"
                 }
             ],
             "bias_score": "0.8",
-            "overall_assessment": "Multiple serious bias issues detected"
+            "overall_assessment": "Multiple serious bias issues detected",
+            "legitimate_requirements": ["Sales experience", "Communication skills"]
         })
         
         with patch.object(llm_service.model, 'generate_content', return_value=mock_response):
@@ -437,6 +525,8 @@ class TestRealWorldScenarios:
             assert isinstance(result, dict)
             assert float(result["bias_score"]) > 0.5  # Should be high bias
             assert len(result["issues"]) >= 2  # Should detect multiple issues
+            assert result["role"] == "Salesperson"
+            assert result["industry"] == "Sales"
     
     @pytest.mark.asyncio
     async def test_improvement_suggestions_realistic(self, llm_service):
@@ -469,7 +559,12 @@ class TestRealWorldScenarios:
             result = await llm_service.improve_language(job_description)
             
             assert len(result["suggestions"]) == 2
-            assert result["clarity_score"] >= 0.7
-            assert result["inclusivity_score"] >= 0.7
+            assert result["clarity_score"] == 0.8
+            assert result["inclusivity_score"] == 0.9
             assert "improved_text" in result
             assert len(result["seo_keywords"]) > 0
+            
+            # Check that categories are valid
+            categories = [suggestion["category"] for suggestion in result["suggestions"]]
+            assert "inclusivity" in categories
+            assert "professionalism" in categories
