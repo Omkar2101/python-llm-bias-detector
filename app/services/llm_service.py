@@ -224,7 +224,7 @@ class LLMService:
         """Use Gemini to suggest language improvements"""
         
         improvement_prompt = f"""
-        **If the provided text is related to a job description then do the following**
+        **At first check that the job description is related to the perticular job role and industry and fullfill the requirements of the job description then do the following**
         Improve the following job description for:
         1. Clarity and readability
         2. Inclusive language
@@ -323,7 +323,7 @@ class LLMService:
             "inclusivity_score": inclusivity_score,
             "seo_keywords": ["keyword1", "keyword2"]
         }}
-        **If the provided text is not related to a job description then do the following**
+        **If the provided text is not related to a job description and donot fullfill the requirements of job descriptions then do the following**
         Return ONLY a valid JSON response (no additional text):
         {{
             "suggestions": []
