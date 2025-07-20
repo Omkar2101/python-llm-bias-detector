@@ -2,10 +2,10 @@ import os
 import io
 from typing import Optional
 import easyocr
-import PyPDF2
+# import PyPDF2
+from pypdf import PdfReader
 from docx import Document
 from PIL import Image
-import pytesseract
 import numpy as np
 from fastapi import UploadFile
 from app.models.schemas import TextExtractionResponse
@@ -60,6 +60,8 @@ class TextExtractor:
                 extracted_text = self._extract_from_image(content)
             elif file_ext == 'pdf':
                 extracted_text = self._extract_from_pdf(content)
+            elif file_ext == 'txt':  # Add this line
+                extracted_text = self._extract_from_txt(content)
             elif file_ext in ['docx', 'doc']:
                 extracted_text = self._extract_from_docx(content)
                 print(f"Extracted text from DOCX: {extracted_text[:100]}...")  # Debug log here is allright
@@ -84,7 +86,7 @@ class TextExtractor:
     @staticmethod
     def _extract_from_pdf(content: bytes) -> str:
         """Extract text from PDF content"""
-        pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+        pdf_reader = PdfReader(io.BytesIO(content))
         text = ""
         for page in pdf_reader.pages:
             text += page.extract_text() + "\n"
@@ -99,6 +101,22 @@ class TextExtractor:
             text += paragraph.text + "\n"
         return text.strip()
     
+    @staticmethod
+    def _extract_from_txt(content: bytes) -> str:
+        """Extract text from TXT content"""
+        try:
+            # Try UTF-8 first
+            text = content.decode('utf-8')
+        except UnicodeDecodeError:
+            try:
+                # Fallback to latin-1 if UTF-8 fails
+                text = content.decode('latin-1')
+            except UnicodeDecodeError:
+                # Final fallback to ignore errors
+                text = content.decode('utf-8', errors='ignore')
+        
+        return text.strip()
+
     def _extract_from_image(self, content: bytes) -> str:
         """Extract text from image using OCR"""
         try:

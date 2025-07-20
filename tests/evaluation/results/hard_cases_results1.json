@@ -1,0 +1,353 @@
+{
+  "timestamp": "2025-07-19T21:57:50.062382",
+  "overall_stats": {
+    "total_cases": 5,
+    "successful_evaluations": 5,
+    "passed_cases": 4,
+    "pass_rate": 0.8,
+    "avg_bias_score_diff": 0.15999999999999998,
+    "avg_inclusivity_score_diff": 0.1,
+    "avg_clarity_score_diff": 0.06999999999999999
+  },
+  "difficulty_stats": {
+    "hard": {
+      "total": 5,
+      "passed": 4,
+      "pass_rate": 0.8
+    }
+  },
+  "individual_results": [
+    {
+      "test_case_id": "HC001",
+      "test_case_name": "Subtle But Clear Discrimination",
+      "difficulty_level": "hard",
+      "description": "Multiple subtle discriminations that require sophisticated detection",
+      "expected_scores": {
+        "bias_score": 0.8,
+        "inclusivity_score": 0.2,
+        "clarity_score": 0.7,
+        "issues_count": 6
+      },
+      "actual_scores": {
+        "bias_score": 1.0,
+        "inclusivity_score": 0.1,
+        "clarity_score": 0.85,
+        "issues_count": 19
+      },
+      "score_differences": {
+        "bias_diff": 0.19999999999999996,
+        "inclusivity_diff": 0.1,
+        "clarity_diff": 0.15000000000000002
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": false,
+        "expected_types_found": true
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "polished, attractive female assistant",
+          "severity": "high",
+          "explanation": "Specifying 'female' is direct gender discrimination. 'Attractive' is subjective and not a bona fide occupational qualification for an executive assistant role."
+        },
+        {
+          "type": "age",
+          "text": "young, energetic",
+          "severity": "medium",
+          "explanation": "'Young' implies age discrimination. While 'energetic' might seem related to work ethic, it can be a coded way to exclude older applicants. It should be replaced with specific skills related to managing workload."
+        },
+        {
+          "type": "socioeconomic",
+          "text": "from a good family background",
+          "severity": "high",
+          "explanation": "This is blatant socioeconomic discrimination. A candidate's family background has no bearing on their ability to perform the job."
+        },
+        {
+          "type": "gender",
+          "text": "native English speaker",
+          "severity": "medium",
+          "explanation": "Unless the job requires a specific nuanced understanding of English that only a native speaker would possess (which is unlikely for an executive assistant role), requiring a 'native English speaker' is discriminatory. 'Fluent English' is a more appropriate and inclusive requirement."
+        },
+        {
+          "type": "cultural",
+          "text": "traditional values and professional appearance",
+          "severity": "medium",
+          "explanation": "'Traditional values' is vague and can be used to discriminate against individuals with different beliefs or lifestyles. 'Professional appearance' is subjective and can be discriminatory if not clearly defined and job-related."
+        },
+        {
+          "type": "gender",
+          "text": "Female preferred for client interaction",
+          "severity": "high",
+          "explanation": "This is explicit gender discrimination. Client interaction does not justify preferring one gender over another."
+        },
+        {
+          "type": "age",
+          "text": "Age 22-28 years",
+          "severity": "high",
+          "explanation": "This is explicit age discrimination. There is no justification for limiting the age range for an executive assistant role."
+        },
+        {
+          "type": "socioeconomic",
+          "text": "Ivy League education preferred",
+          "severity": "medium",
+          "explanation": "Preferring an Ivy League education can be discriminatory based on socioeconomic status and access to education. It's more appropriate to focus on skills and experience relevant to the role."
+        },
+        {
+          "type": "disability",
+          "text": "No visible tattoos or unconventional appearance",
+          "severity": "medium",
+          "explanation": "This is potentially discriminatory based on appearance and could disproportionately affect individuals with certain cultural or religious practices, or those with disabilities that affect appearance. Unless there's a specific, job-related reason (e.g., safety concerns), this is inappropriate."
+        },
+        {
+          "type": "cultural",
+          "text": "Strong family values and conservative mindset",
+          "severity": "high",
+          "explanation": "This is discriminatory based on personal beliefs and values. A candidate's family values and political mindset are irrelevant to their ability to perform the job."
+        },
+        {
+          "type": "gender",
+          "text": "strong",
+          "severity": "medium",
+          "explanation": "'strong' is masculine-coded language that may discourage diverse applicants"
+        },
+        {
+          "type": "gender",
+          "text": "male preferred",
+          "severity": "medium",
+          "explanation": "'male preferred' indicates gender bias and may be discriminatory"
+        },
+        {
+          "type": "gender",
+          "text": "male",
+          "severity": "medium",
+          "explanation": "'male' indicates gender bias and may be discriminatory"
+        },
+        {
+          "type": "gender",
+          "text": "female",
+          "severity": "medium",
+          "explanation": "'female' indicates gender bias and may be discriminatory"
+        },
+        {
+          "type": "age",
+          "text": "young",
+          "severity": "medium",
+          "explanation": "'young' indicates age bias and may be discriminatory"
+        },
+        {
+          "type": "age",
+          "text": "energetic",
+          "severity": "medium",
+          "explanation": "'energetic' indicates age bias and may be discriminatory"
+        },
+        {
+          "type": "cultural",
+          "text": "native english speaker",
+          "severity": "medium",
+          "explanation": "'native english speaker' indicates cultural bias and may be discriminatory"
+        },
+        {
+          "type": "cultural",
+          "text": "traditional values",
+          "severity": "medium",
+          "explanation": "'traditional values' indicates cultural bias and may be discriminatory"
+        },
+        {
+          "type": "socioeconomic",
+          "text": "ivy league",
+          "severity": "medium",
+          "explanation": "'ivy league' indicates educational bias and may be discriminatory"
+        }
+      ],
+      "overall_assessment": "This job description contains multiple instances of severe bias across gender, age, socioeconomic status, language, cultural values, and potentially disability. The requirements are not job-related and create an exclusionary and discriminatory environment.",
+      "passed": false
+    },
+    {
+      "test_case_id": "HC002",
+      "test_case_name": "Legitimate Job-Relevant Requirements",
+      "difficulty_level": "hard",
+      "description": "Physical requirements that are genuinely job-relevant and non-discriminatory",
+      "expected_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.95,
+        "clarity_score": 0.9,
+        "issues_count": 0
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.9,
+        "clarity_score": 0.85,
+        "issues_count": 1
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.04999999999999993,
+        "clarity_diff": 0.050000000000000044
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "interpersonal",
+          "severity": "medium",
+          "explanation": "'interpersonal' is feminine-coded language that may discourage diverse applicants"
+        }
+      ],
+      "overall_assessment": "The job description for a Physical Therapist in a Sports Medicine Clinic appears to be generally well-written and focused on job-relevant requirements. The physical requirements listed seem justified given the nature of the work, which involves demonstrating exercises, providing manual therapy, and working with athletes. The communication skills and CPR certification are also relevant and appropriate. No significant biases were detected.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC003",
+      "test_case_name": "Cultural Role With Ambiguous Requirements",
+      "difficulty_level": "hard",
+      "description": "Cultural requirements that could be job-relevant or potentially exclusionary",
+      "expected_scores": {
+        "bias_score": 0.3,
+        "inclusivity_score": 0.7,
+        "clarity_score": 0.8,
+        "issues_count": 2
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.9,
+        "clarity_score": 0.85,
+        "issues_count": 1
+      },
+      "score_differences": {
+        "bias_diff": 0.3,
+        "inclusivity_diff": 0.20000000000000007,
+        "clarity_diff": 0.04999999999999993
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": false
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "strong",
+          "severity": "medium",
+          "explanation": "'strong' is masculine-coded language that may discourage diverse applicants"
+        }
+      ],
+      "overall_assessment": "The job description is for a Cultural Consultant specializing in the Japanese market. Given the role's focus on cultural understanding and communication within a specific cultural context, the requirements listed appear to be legitimate and directly related to the job function. There is no apparent bias in the language used.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC004",
+      "test_case_name": "Model Inclusive Job Description",
+      "difficulty_level": "hard",
+      "description": "Highly inclusive job description with explicit diversity commitment",
+      "expected_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 1.0,
+        "clarity_score": 0.95,
+        "issues_count": 0
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 1.0,
+        "clarity_score": 1.0,
+        "issues_count": 2
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.0,
+        "clarity_diff": 0.050000000000000044
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "strong",
+          "severity": "medium",
+          "explanation": "'strong' is masculine-coded language that may discourage diverse applicants"
+        },
+        {
+          "type": "gender",
+          "text": "collaborative",
+          "severity": "medium",
+          "explanation": "'collaborative' is feminine-coded language that may discourage diverse applicants"
+        }
+      ],
+      "overall_assessment": "The job description for a Software Engineer on the Accessibility Team appears to be well-written and inclusive. It explicitly welcomes diverse applicants and focuses on skills and experience relevant to the role. There are no apparent biases in the language or requirements.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC005",
+      "test_case_name": "Fashion Industry Appearance Requirements",
+      "difficulty_level": "hard",
+      "description": "Industry-specific appearance requirements that may be legitimate but potentially discriminatory",
+      "expected_scores": {
+        "bias_score": 0.4,
+        "inclusivity_score": 0.6,
+        "clarity_score": 0.8,
+        "issues_count": 3
+      },
+      "actual_scores": {
+        "bias_score": 0.7,
+        "inclusivity_score": 0.75,
+        "clarity_score": 0.85,
+        "issues_count": 4
+      },
+      "score_differences": {
+        "bias_diff": 0.29999999999999993,
+        "inclusivity_diff": 0.15000000000000002,
+        "clarity_diff": 0.04999999999999993
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": false
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "Height between 5'9\" and 6'0\"",
+          "severity": "medium",
+          "explanation": "Height requirements disproportionately affect women, as the specified range aligns more closely with average male heights. While height can be a factor in modeling, a rigid range without justification for specific campaign needs can be discriminatory."
+        },
+        {
+          "type": "gender",
+          "text": "Clothing size 2-4",
+          "severity": "medium",
+          "explanation": "This requirement is highly restrictive and primarily applies to women's clothing sizes. It excludes individuals who may be excellent models but do not fit this narrow size range. This is discriminatory unless the campaign specifically requires models of this size due to sample availability or other very specific reasons."
+        },
+        {
+          "type": "socioeconomic",
+          "text": "Strong social media presence preferred",
+          "severity": "low",
+          "explanation": "While a social media presence can be beneficial, prioritizing it may disadvantage individuals from lower socioeconomic backgrounds who may not have the resources or opportunities to build a strong online presence. It also assumes that all models should be influencers, which may not be necessary for all campaigns."
+        },
+        {
+          "type": "gender",
+          "text": "strong",
+          "severity": "medium",
+          "explanation": "'strong' is masculine-coded language that may discourage diverse applicants"
+        }
+      ],
+      "overall_assessment": "The job description contains potentially discriminatory elements related to gender and socioeconomic status. The height and clothing size requirements are restrictive and may disproportionately exclude certain groups. The preference for a strong social media presence could disadvantage individuals from lower socioeconomic backgrounds. The overall assessment suggests a need to review and revise the requirements to ensure inclusivity and focus on essential job-related skills and qualities.",
+      "passed": true
+    }
+  ]
+}
