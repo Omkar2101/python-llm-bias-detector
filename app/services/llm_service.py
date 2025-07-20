@@ -13,10 +13,10 @@ class LLMService:
         # Load environment variables from .env file
         load_dotenv()  # Add this line
 
-        # Configure Google Gemini
-        api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_GEMINI_API_KEY not found in environment variables")
+        # # Configure Google Gemini
+        # api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
+        # if not api_key:
+        #     raise ValueError("GOOGLE_GEMINI_API_KEY not found in environment variables")
 
         # Configure Google Gemini
         genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
