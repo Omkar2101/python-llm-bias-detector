@@ -54,6 +54,8 @@ class LLMService:
         - Technical role requiring specific technical skills
         - Driver requiring valid driving license
         - Accountant requiring accounting certification
+        - Medical roles requiring confidence, independence, leadership in patient care
+        - Professional roles mentioning competitive salary, strong team, supportive environment
 
         **POTENTIALLY BIASED Examples:**
         - Administrative role requiring "native English speaker" (vs. "fluent English")
@@ -71,6 +73,19 @@ class LLMService:
         - **Experience Requirements**: Flag if unrealistic for position level
         - **Cultural Requirements**: Flag unless specific cultural knowledge is job-relevant
 
+        **Professional Language Guidelines - DO NOT FLAG:**
+        - **Medical/Healthcare roles**: "confident", "independent", "strong", "leadership" are legitimate professional requirements
+        - **Standard business terms**: "competitive salary", "supportive environment", "professional", "committed" are normal job descriptions
+        - **Performance descriptors**: "excellent", "outstanding", "dedicated" when describing work quality expectations
+        - **Team descriptors**: "collaborative", "team-oriented", "supportive" are standard workplace language
+        - **Industry-standard terms**: Words commonly used in specific industries that relate to job performance
+
+        **ONLY FLAG as Gender Bias if:**
+        - Language specifically excludes based on gender stereotypes WITHOUT job relevance
+        - Uses unnecessarily gendered terms (e.g., "salesman" instead of "salesperson")
+        - Requires physical appearance standards unrelated to job function
+        - Uses language that specifically targets one gender in non-relevant contexts
+
         **Scoring Methodology:**
         - Start with 0.0 (no bias)
         - Add points for each GENUINELY biased issue (not legitimate job requirements):
@@ -79,6 +94,7 @@ class LLMService:
         * High severity: +0.3 per issue
         - Cap maximum score at 1.0
         - Consider job context when determining if requirement is discriminatory
+        - DO NOT score standard professional language as bias
 
         **Severity Guidelines:**
         - **Low**: Subtle coded language that could exclude without job relevance
@@ -86,12 +102,19 @@ class LLMService:
         - **High**: Explicit discrimination with no job-related justification
 
         **Job-Specific Considerations:**
+        - **Medical/Healthcare roles**: Confidence, independence, and leadership are essential professional qualities - NOT bias
         - **Teaching/Training roles**: Language, communication, and educational requirements are typically legitimate
         - **Customer-facing roles**: Communication and presentation requirements may be legitimate
         - **Physical roles**: Physical capability requirements are typically legitimate
         - **Technical roles**: Technical skill requirements are typically legitimate
         - **Leadership roles**: Leadership experience requirements are typically legitimate
         - **Safety-critical roles**: Health and safety requirements are typically legitimate
+
+        **Words/Phrases that are LEGITIMATE in Professional Context:**
+        - confident, confidence, independent, leadership, leader, strong, competitive, supportive
+        - dedicated, committed, professional, excellent, outstanding, reliable
+        - collaborative, team-oriented, proactive, results-driven, innovative
+        - These should ONLY be flagged if used in clearly discriminatory context
 
         Job Description:
         {text}
@@ -101,6 +124,7 @@ class LLMService:
         2. Evaluate each potential bias against job relevance
         3. Only flag requirements that are NOT justified by job function
         4. Provide clear explanation for why flagged items are biased vs. job-relevant
+        5. DO NOT flag standard professional language unless it's clearly discriminatory in context
 
         Return ONLY a valid JSON response with the following structure (no additional text):
         {{
@@ -214,6 +238,14 @@ class LLMService:
         
         7. Calculate inclusivity_score: A single float value between 0 and 1, where 0 means highly exclusive/biased and 1 means fully inclusive. Evaluate based on gender-neutral language, unnecessary requirements, and accessibility considerations. Start with 1.0 and subtract points for exclusionary elements. Consider job context - only penalize requirements that aren't justified by job function. Keep this value realistic and consistent with the issues present. Put this value in below response in front of inclusivity_score.
         
+        **Professional Language Guidelines - DO NOT PENALIZE:**
+        - **Standard professional terms**: "competitive", "confident", "independent", "strong", "supportive", "leadership", "dedicated", "committed", "professional", "excellent", "outstanding"
+        - **Medical/Healthcare context**: "confident in handling cases", "independent practice", "strong clinical skills", "leadership in patient care" are legitimate requirements
+        - **Performance descriptors**: "results-driven", "proactive", "innovative", "reliable", "collaborative"
+        - **Industry-standard language**: Terms commonly used in specific industries that relate to job performance
+        - **Company culture descriptions**: "supportive environment", "professional work culture", "team-oriented"
+
+
         **Scoring Guidelines:**
         
         **Clarity Score Deductions (start from 1.0):**
@@ -229,27 +261,52 @@ class LLMService:
           * Racial requirements like "Caucasian background" (-0.8)
           * Religious discrimination "no religious accommodations" (-0.8)
           * Age discrimination "young professionals only" (-0.8)
-        - Gender-biased terms (-0.15 each)
-        - Unnecessary degree requirements (-0.2 each)
-        - Exclusive language (-0.1 each)
-        - Cultural assumptions (-0.1 each)
-        - Appearance requirements (-0.2 each)
-        - Inappropriate work requirements (-0.3 each)
-        
-        **Examples of Discriminatory Language:**
+          - **ONLY deduct for genuinely biased terms that exclude without job relevance:**
+          * Gender-biased terms that stereotype (-0.15 each) - NOT standard professional language
+          * Unnecessary degree requirements for role level (-0.2 each)
+          * Exclusive language without job justification (-0.1 each)
+          * Cultural assumptions unrelated to job (-0.1 each)
+          * Appearance requirements unrelated to role (-0.2 each)
+          * Inappropriate work requirements (-0.3 each)
+
+          **Examples of ACTUAL Discriminatory Language to Penalize:**
         - **Explicit discrimination**: "male preferred", "Caucasian background", "no religious accommodations"
-        - **Gender bias**: "masculine presence", "aggressive", "dominant"
-        - **Age bias**: "young and energetic", "recent graduate", "digital native"
-        - **Cultural bias**: "native speaker", "cultural fit", "American values"
-        - **Appearance bias**: "traditional appearance", "classic look", "attractive"
-        - **Educational elitism**: "Ivy League only", "prestigious university"
+        - **Gender stereotyping**: "masculine presence required", "aggressive sales approach", "dominant personality needed"
+        - **Age bias**: "young and energetic required", "recent graduate only", "digital native preferred"
+        - **Cultural bias**: "native speaker only" (when fluency would suffice), "cultural fit" without specifics, "American values required"
+        - **Appearance bias**: "traditional appearance required", "classic look needed", "attractive candidates only"
+        - **Educational elitism**: "Ivy League only", "prestigious university graduates preferred"
+
+        **Examples of LEGITIMATE Professional Language - DO NOT Penalize:**
+        - **Medical roles**: "confident in handling emergency cases", "independent clinical decision-making", "strong diagnostic skills"
+        - **Leadership roles**: "leadership experience", "ability to lead teams", "strong management skills"
+        - **Sales roles**: "competitive salary", "results-driven approach", "strong communication skills"
+        - **General professional**: "dedicated professional", "committed to excellence", "supportive team environment"
+        
+        
+        
         
         **Legitimate vs. Discriminatory Requirements:**
-        - **Legitimate**: Hindi teacher requiring Hindi fluency, security guard requiring physical fitness
-        - **Discriminatory**: Administrative role requiring "native English speaker", general office job requiring "young and energetic"
+        - **Legitimate**: Hindi teacher requiring Hindi fluency, security guard requiring physical fitness,medical role requiring confidence in patient care, technical role requiring specific certifications
+        - **Discriminatory**: Administrative role requiring "native English speaker", general office job requiring "young and energetic",non-customer facing role requiring specific appearance standards
         
+        **Context-Aware Evaluation:**
+        - **Medical/Healthcare**: Professional confidence, independence, and clinical skills are job requirements
+        - **Leadership positions**: Management and leadership qualities are legitimate requirements
+        - **Customer-facing roles**: Communication and professional presentation may be legitimate
+        - **Technical roles**: Technical competencies and problem-solving abilities are legitimate
+        - **Educational roles**: Teaching qualifications and subject expertise are legitimate
+
+
         Original Job Description:
         {text}
+
+        **Analysis Instructions:**
+        1. Identify job role and industry context first
+        2. Distinguish between legitimate professional requirements and actual bias
+        3. Only suggest improvements for genuinely problematic language
+        4. Maintain professional tone while improving inclusivity
+        5. DO NOT flag or penalize standard professional language unless clearly discriminatory
         
         Return ONLY a valid JSON response (no additional text):
         {{
