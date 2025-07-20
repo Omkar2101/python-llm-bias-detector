@@ -4,9 +4,9 @@ name: Python LLM Bias Detector CI/CD
 
 on:
   push:
-    branches: [ testing,main,prompt ]
+    branches: [ testing,main,prompt,runtest ]
   pull_request:
-    branches: [ testing, main, prompt ]
+    branches: [ testing, main, prompt,runtest ]
 
 jobs:
   build-and-test:
