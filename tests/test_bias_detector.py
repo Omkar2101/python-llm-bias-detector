@@ -362,76 +362,6 @@ class TestBasicFunctionality:
                 assert result.inclusivity_score == 0.8
 
 
-class TestRuleBasedBiasDetection:
-    """Test rule-based bias detection (doesn't need LLM)"""
-    
-    def test_detect_gender_coded_words(self, bias_detector):
-        """Test detection of gender-coded words"""
-        text = "We need an aggressive and competitive candidate"
-        
-        issues = bias_detector._detect_rule_based_bias(text)
-        
-        # Should find gender-coded words
-        assert len(issues) > 0
-        
-        # Check issue properties
-        gender_issues = [issue for issue in issues if issue.type == BiasType.GENDER]
-        assert len(gender_issues) > 0
-        
-        # Check specific word detection
-        found_words = [issue.text for issue in gender_issues]
-        assert 'aggressive' in found_words
-        assert 'competitive' in found_words
-    
-    
-    def test_detect_explicit_gender_terms(self, bias_detector):
-        """Test detection of explicit gender terms"""
-        text = "Looking for a male candidate for this position"
-        
-        issues = bias_detector._detect_rule_based_bias(text)
-        
-        # Should detect 'male' as problematic
-        assert len(issues) > 0
-        male_issues = [issue for issue in issues if 'male' in issue.text]
-        assert len(male_issues) > 0
-    
-    
-    def test_detect_age_bias(self, bias_detector):
-        """Test detection of age-related bias"""
-        text = "Seeking young and energetic recent graduates"
-        
-        issues = bias_detector._detect_rule_based_bias(text)
-        
-        # Should detect age-related terms
-        age_issues = [issue for issue in issues if issue.type == BiasType.AGE]
-        assert len(age_issues) > 0
-        
-        # Check specific terms
-        found_terms = [issue.text for issue in age_issues]
-        assert any('young' in term for term in found_terms)
-        assert any('energetic' in term for term in found_terms)
-    
-    
-    def test_no_bias_in_neutral_text(self, bias_detector):
-        """Test that neutral text doesn't trigger bias detection"""
-        text = "We are seeking a qualified professional with relevant experience"
-        
-        issues = bias_detector._detect_rule_based_bias(text)
-        
-        # Should not detect any bias
-        assert len(issues) == 0
-    
-    
-    def test_severity_assignment(self, bias_detector):
-        """Test that severity levels are assigned correctly"""
-        text = "females need not apply for this position"
-        
-        issues = bias_detector._detect_rule_based_bias(text)
-        
-        # Should detect high severity for discriminatory language
-        assert len(issues) > 0
-        high_severity_issues = [issue for issue in issues if issue.severity == SeverityLevel.HIGH]
-        assert len(high_severity_issues) > 0
 
 
 
@@ -509,12 +439,6 @@ class TestErrorHandling:
 class TestHelperMethods:
     """Test helper methods"""
     
-    def test_map_category_to_bias_type(self, bias_detector):
-        """Test category to bias type mapping"""
-        assert bias_detector._map_category_to_bias_type('gender_bias') == BiasType.GENDER
-        assert bias_detector._map_category_to_bias_type('age_bias') == BiasType.AGE
-        assert bias_detector._map_category_to_bias_type('race_bias') == BiasType.RACIAL
-        assert bias_detector._map_category_to_bias_type('unknown_bias') == BiasType.GENDER  # default
     
     
     def test_parse_category(self, bias_detector):

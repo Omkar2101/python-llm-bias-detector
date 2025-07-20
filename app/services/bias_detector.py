@@ -9,42 +9,7 @@ class BiasDetector:
     def __init__(self):
         self.llm_service = LLMService()
         
-        # Predefined bias patterns (as fallback to LLM)
-        # self.gender_coded_words = {
-        #     'masculine': ['aggressive', 'ambitious', 'assertive', 'competitive', 'confident', 
-        #                  'decisive', 'determined', 'dominant', 'independent', 'leader',
-        #                  'outspoken', 'self-reliant', 'strong', 'superior'],
-        #     'feminine': ['collaborative', 'cooperative', 'dependable', 'honest', 
-        #                 'interpersonal', 'loyal', 'pleasant', 'polite', 'quiet',
-        #                 'responsible', 'supportive', 'sympathetic', 'team player', 'trustworthy']
-        # }
-        
-        # self.problematic_phrases = {
-        #     'gender_bias': [
-        #         'male preferred', 'females need not apply', 'masculine presence',
-        #         'male salesperson', 'female salesperson', 'guys', 'brotherhood',
-        #         'male', 'female', 'masculine', 'feminine'
-        #     ],
-        #     'race_bias': [
-        #         'european descent', 'caucasian background', 'classic american look',
-        #         'white clientele', 'traditional appearance'
-        #     ],
-        #     'age_bias': [
-        #         'young and energetic', 'recent graduate', 'digital native',
-        #         'fresh thinking', 'up-and-coming', 'mature', 'experienced professional',
-        #         'young', 'energetic', 'graduates', 'recent grad'
-        #     ],
-        #     'cultural_bias': [
-        #         'native english speaker', 'american accent', 'u.s.-born',
-        #         'cultural fit', 'traditional values', 'western european'
-        #     ],
-        #     'religious_bias': [
-        #         'no accommodations', 'religious attire', 'christian values'
-        #     ],
-        #     'educational_bias': [
-        #         'ivy league', 'top-tier schools', 'elite university'
-        #     ]
-        # }
+       
     
     async def analyze_comprehensive(self, text: str) -> BiasAnalysisResult:
         print(f"Analyzing text: {text[:100]}...")  # Debug log
@@ -222,54 +187,7 @@ class BiasDetector:
         print(f"No valid category found in '{category_str}', defaulting to clarity")
         return CategoryType.CLARITY
     
-    # def _detect_rule_based_bias(self, text: str) -> List[BiasIssue]:
-    #     """Rule-based bias detection as fallback/supplement to LLM"""
-    #     issues = []
-    #     text_lower = text.lower()
-        
-    #     # Check for gender-coded words
-    #     for category, words in self.gender_coded_words.items():
-    #         for word in words:
-    #             if word in text_lower:
-    #                 start_idx = text_lower.find(word)
-    #                 issues.append(BiasIssue(
-    #                     type=BiasType.GENDER,
-    #                     text=word,
-    #                     start_index=start_idx,
-    #                     end_index=start_idx + len(word),
-    #                     severity=SeverityLevel.MEDIUM,
-    #                     explanation=f"'{word}' is {category}-coded language that may discourage diverse applicants"
-    #                 ))
-        
-    #     # Check for other problematic phrases
-    #     for bias_category, phrases in self.problematic_phrases.items():
-    #         for phrase in phrases:
-    #             if phrase in text_lower:
-    #                 start_idx = text_lower.find(phrase)
-    #                 bias_type = self._map_category_to_bias_type(bias_category)
-    #                 severity = SeverityLevel.HIGH if 'need not apply' in phrase else SeverityLevel.MEDIUM
-                    
-    #                 issues.append(BiasIssue(
-    #                     type=bias_type,
-    #                     text=phrase,
-    #                     start_index=start_idx,
-    #                     end_index=start_idx + len(phrase),
-    #                     severity=severity,
-    #                     explanation=f"'{phrase}' indicates {bias_category.replace('_', ' ')} and may be discriminatory"
-    #                 ))
-        
-    #     return issues
     
-    # def _map_category_to_bias_type(self, category: str) -> BiasType:
-    #     mapping = {
-    #         'gender_bias': BiasType.GENDER,
-    #         'race_bias': BiasType.RACIAL,
-    #         'age_bias': BiasType.AGE,
-    #         'cultural_bias': BiasType.CULTURAL,
-    #         'religious_bias': BiasType.RELIGIOUS,
-    #         'educational_bias': BiasType.SOCIOECONOMIC
-    #     }
-    #     return mapping.get(category, BiasType.GENDER)
         
    
     

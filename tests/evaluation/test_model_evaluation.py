@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from app.services.llm_service import LLMService
 from app.services.bias_detector import BiasDetector
-from tests.test_data.test_cases import ALL_TEST_CASES, EASY_CASES, MEDIUM_CASES, HARD_CASES, TestCase
+from tests.test_data.test_cases import ALL_TEST_CASES, HARD_CASES, TestCase
 
 class BiasModelEvaluator:
     def __init__(self):
