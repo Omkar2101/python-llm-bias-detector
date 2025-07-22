@@ -29,7 +29,7 @@ class BiasDetector:
         try:
             # Get LLM analysis for language improvement
             llm_improvement_result = await self.llm_service.improve_language(text)
-            print(f"LLM improve result: {llm_improvement_result}")  # Debug log
+            # print(f"LLM improve result: {llm_improvement_result}")  # Debug log
         except Exception as e:
             print(f"Error in LLM improvement: {e}")
             llm_improvement_result = {
@@ -59,7 +59,7 @@ class BiasDetector:
                 bias_score = 0.0
 
         # clarity_score = llm_improvement_result.get( self._calculate_clarity_score(text))
-        clarity_score = llm_improvement_result.get('clarity_score')
+        clarity_score = llm_bias_result.get('clarity_score')
         if isinstance(clarity_score, str):
             try:
                 clarity_score = float(clarity_score)
@@ -68,7 +68,7 @@ class BiasDetector:
 
         
         # inclusivity_score = llm_improvement_result.get( self._calculate_inclusivity_score(text))
-        inclusivity_score = llm_improvement_result.get('inclusivity_score')
+        inclusivity_score = llm_bias_result.get('inclusivity_score')
         if isinstance(inclusivity_score, str):
             try:
                 inclusivity_score = float(inclusivity_score)

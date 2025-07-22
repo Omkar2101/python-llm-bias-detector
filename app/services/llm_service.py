@@ -25,142 +25,107 @@ class LLMService:
     async def detect_bias(self, text: str) -> Dict:
         """Use Gemini to detect bias in job description"""
        
-
         bias_detection_prompt = f"""
-        Analyze the following job description for various types of bias and discriminatory language.
-        IMPORTANT: Consider job-relevant requirements vs. discriminatory bias. Some requirements may be legitimate based on job function.
+        Analyze the following text for job description bias. Follow this structured approach:
 
-        **Job Context Analysis:**
-        At first check that the job description is related to the perticular job role and industry.
-        Then, identify the job role, industry, and core functions to determine what requirements are legitimate vs. potentially biased.
+        **STEP 1: VALIDATION**
+        Determine if the text is a job description. If not, return N/A response format.
 
-        **Bias Categories to Analyze:**
-        1. **Gender bias**: Masculine/feminine coded words not related to job function
-        2. **Age bias**: Age-related requirements without job justification
-        3. **Racial/cultural bias**: Cultural assumptions not required for job performance
-        4. **Disability bias**: Physical requirements unnecessary for job function
-        5. **Socioeconomic bias**: Class-based assumptions not job-relevant
-        6. **Language bias**: Language requirements not essential for job performance
+        **STEP 2: CONTEXT ANALYSIS** 
+        Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
 
-        **Legitimate vs. Biased Requirements:**
+        **STEP 3: BIAS DETECTION**
+        Scan for these bias types, considering job relevance:
 
-        **LEGITIMATE Examples (NOT bias):**
-        - Hindi teacher requiring Hindi fluency
-        - International sales role requiring specific language skills
-        - Physical therapist requiring physical capabilities
-        - Security guard requiring physical fitness standards
-        - Customer service requiring communication skills
-        - Teaching role requiring teaching qualification/experience
-        - Technical role requiring specific technical skills
-        - Driver requiring valid driving license
-        - Accountant requiring accounting certification
-        - Medical roles requiring confidence, independence, leadership in patient care
-        - Professional roles mentioning competitive salary, strong team, supportive environment
+        1. **Gender Bias**: Gendered language not required for job function
+        - BIASED: "salesman", "aggressive personality", "dominant leader" 
+        - LEGITIMATE: "confident patient care", "strong clinical skills"
 
-        **POTENTIALLY BIASED Examples:**
-        - Administrative role requiring "native English speaker" (vs. "fluent English")
-        - General office job requiring "young and energetic"
-        - Non-customer facing role requiring "attractive appearance"
-        - Remote work requiring "own transportation"
-        - Entry-level role requiring "prestigious university degree"
-        - General role requiring "cultural fit" without specifics
-        - Non-physical job requiring unnecessary physical requirements
+        2. **Age Bias**: Age requirements without job justification
+        - BIASED: "young and energetic", "digital native", "recent graduate only"
+        - LEGITIMATE: "5+ years experience", "senior-level position"
 
-        **Context-Specific Evaluation Rules:**
-        - **Language Requirements**: Only flag if language skill isn't directly related to job function
-        - **Physical Requirements**: Only flag if physical capability isn't essential for job tasks
-        - **Educational Requirements**: Flag if overly specific or unnecessary for job level
-        - **Experience Requirements**: Flag if unrealistic for position level
-        - **Cultural Requirements**: Flag unless specific cultural knowledge is job-relevant
+        3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
+        - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
+        - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
 
-        **Professional Language Guidelines - DO NOT FLAG:**
-        - **Medical/Healthcare roles**: "confident", "independent", "strong", "leadership" are legitimate professional requirements
-        - **Standard business terms**: "competitive salary", "supportive environment", "professional", "committed" are normal job descriptions
-        - **Performance descriptors**: "excellent", "outstanding", "dedicated" when describing work quality expectations
-        - **Team descriptors**: "collaborative", "team-oriented", "supportive" are standard workplace language
-        - **Industry-standard terms**: Words commonly used in specific industries that relate to job performance
+        4. **Disability Bias**: Physical requirements unnecessary for job
+        - BIASED: "perfect vision" for desk job, "must stand" for remote work
+        - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
 
-        **ONLY FLAG as Gender Bias if:**
-        - Language specifically excludes based on gender stereotypes WITHOUT job relevance
-        - Uses unnecessarily gendered terms (e.g., "salesman" instead of "salesperson")
-        - Requires physical appearance standards unrelated to job function
-        - Uses language that specifically targets one gender in non-relevant contexts
+        5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
+        - BIASED: "prestigious university only", "own car" for remote work
+        - LEGITIMATE: "bachelor's degree", "valid license" for driver
 
-        **Scoring Methodology:**
-        - Start with 0.0 (no bias)
-        - Add points for each GENUINELY biased issue (not legitimate job requirements):
-        * Low severity: +0.1 per issue
-        * Medium severity: +0.2 per issue  
-        * High severity: +0.3 per issue
-        - Cap maximum score at 1.0
-        - Consider job context when determining if requirement is discriminatory
-        - DO NOT score standard professional language as bias
+        **STEP 4: SCORING**
 
-        **Severity Guidelines:**
-        - **Low**: Subtle coded language that could exclude without job relevance
-        - **Medium**: Clear exclusionary language not justified by job function
-        - **High**: Explicit discrimination with no job-related justification
+        **Bias Score (0.0 to 1.0):**
+        - Start at 0.0, add points for each biased issue:
+        - Low severity: +0.1 | Medium: +0.2 | High: +0.3
+        - Cap at 1.0
 
-        **Job-Specific Considerations:**
-        - **Medical/Healthcare roles**: Confidence, independence, and leadership are essential professional qualities - NOT bias
-        - **Teaching/Training roles**: Language, communication, and educational requirements are typically legitimate
-        - **Customer-facing roles**: Communication and presentation requirements may be legitimate
-        - **Physical roles**: Physical capability requirements are typically legitimate
-        - **Technical roles**: Technical skill requirements are typically legitimate
-        - **Leadership roles**: Leadership experience requirements are typically legitimate
-        - **Safety-critical roles**: Health and safety requirements are typically legitimate
+        **Inclusivity Score (0.0 to 1.0):**
+        - Start at 1.0, subtract for exclusionary elements:
+        - Explicit discrimination: -0.8
+        - Gendered terms (biased): -0.15
+        - Unnecessary requirements: -0.2
+        - Exclusive language: -0.1
 
-        **Words/Phrases that are LEGITIMATE in Professional Context:**
-        - confident, confidence, independent, leadership, leader, strong, competitive, supportive
-        - dedicated, committed, professional, excellent, outstanding, reliable
-        - collaborative, team-oriented, proactive, results-driven, innovative
-        - These should ONLY be flagged if used in clearly discriminatory context
+        **Clarity Score (0.0 to 1.0):**
+        - Start at 1.0, subtract for unclear elements:
+        - Complex sentences: -0.1 each
+        - Unclear requirements: -0.15 each
+        - Excessive jargon: -0.1 each
+        - Poor organization: -0.2
+
+        **DO NOT PENALIZE:**
+        - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
+        - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
+        - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+
+        **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
 
         Job Description:
         {text}
-        **If the provided text is related to a job description then do the following 
-        **Analysis Instructions:**
-        1. First identify the job role and its core requirements
-        2. Evaluate each potential bias against job relevance
-        3. Only flag requirements that are NOT justified by job function
-        4. Provide clear explanation for why flagged items are biased vs. job-relevant
-        5. DO NOT flag standard professional language unless it's clearly discriminatory in context
+        
 
-        Return ONLY a valid JSON response with the following structure (no additional text):
-        {{
-            
-            "role": "identified job title/role",
-            "industry": "identified industry/sector",
-            
-            "issues": [
-                {{
-                    "type": "gender|age|racial|cultural|disability|socioeconomic|language",
-                    "text": "the biased phrase",
-                    "start_index": 0,
-                    "end_index": 10,
-                    "severity": "low|medium|high",
-                    "explanation": "why this is problematic and not job-relevant",
-                    "job_relevance": "explanation of why this requirement is/isn't necessary for the role"
-                }}
-            ],
-            "bias_score": bias_score,
-            "overall_assessment": "summary of bias findings considering job context",
-            "legitimate_requirements": ["list of requirements that are job-relevant and not biased"]
-        }}
-        **If the provided text is not  related to a job description then do the following
-        Return ONLY a valid JSON response with the following structure (no additional text):
-        {{
-            
-            
-            "role": "N/A",
-            "industry": "N/A",
-            "issues": [],
-            "bias_score": "N/A",
-            "overall_assessment": "The provided text does not appear to be a job description and therefore cannot be analyzed for employment-related bias.",
-            "legitimate_requirements": "N/A"
+            **For job related text, return a structured JSON response:**
+            Return ONLY valid JSON:
 
+            {{
+                "role": "job title",
+                "industry": "industry name", 
+                "issues": [
+                    {{
+                        "type": "gender|age|racial|cultural|disability|socioeconomic",
+                        "text": "biased phrase",
+                        "start_index": 0,
+                        "end_index": 10,
+                        "severity": "low|medium|high",
+                        "explanation": "why this is biased and not job-relevant",
+                        "job_relevance": "why this requirement is unnecessary for role performance"
+                    }}
+                ],
+                "bias_score": 0.0,
+                "inclusivity_score": 1.0,
+                "clarity_score": 1.0,
+                "overall_assessment": "summary of findings considering job context"
+            }}
+
+            **For non-job related text, return this JSON:**
+            {{
+                "role": "N/A",
+                "industry": "N/A",
+                "issues": [],
+                "bias_score": "N/A",
+                "inclusivity_score": "N/A", 
+                "clarity_score": "N/A",
+                "overall_assessment": "The provided text does not appear to be a job description."
         }}
+
+
         """
+
         
         try:
             response = self.model.generate_content(
@@ -224,79 +189,16 @@ class LLMService:
         """Use Gemini to suggest language improvements"""
         
         improvement_prompt = f"""
-        **At first check that the job description is related to the perticular job role and industry and fullfill the requirements of the job description then do the following**
+        **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
+        
         Improve the following job description for:
         1. Clarity and readability
         2. Inclusive language
         3. Brevity and conciseness
         4. Professional tone
-        5. SEO optimization with relevant keywords
+        5. SEO optimization with relevant keywords (Suggest the keywords that are relevant to the job description and not present in the current text)
         
-        **IMPORTANT: Consider job-relevant requirements vs. discriminatory bias. Some requirements may be legitimate based on job function.**
-        
-        6. Calculate clarity_score: A single float value between 0 and 1, where 0 means very unclear/confusing and 1 means crystal clear and easy to understand. Evaluate based on sentence structure, jargon usage, and requirement clarity. Normalize this based on the number and severity of clarity issues found. Keep this value realistic. Put this value in below response in front of clarity_score.
-        
-        7. Calculate inclusivity_score: A single float value between 0 and 1, where 0 means highly exclusive/biased and 1 means fully inclusive. Evaluate based on gender-neutral language, unnecessary requirements, and accessibility considerations. Start with 1.0 and subtract points for exclusionary elements. Consider job context - only penalize requirements that aren't justified by job function. Keep this value realistic and consistent with the issues present. Put this value in below response in front of inclusivity_score.
-        
-        **Professional Language Guidelines - DO NOT PENALIZE:**
-        - **Standard professional terms**: "competitive", "confident", "independent", "strong", "supportive", "leadership", "dedicated", "committed", "professional", "excellent", "outstanding"
-        - **Medical/Healthcare context**: "confident in handling cases", "independent practice", "strong clinical skills", "leadership in patient care" are legitimate requirements
-        - **Performance descriptors**: "results-driven", "proactive", "innovative", "reliable", "collaborative"
-        - **Industry-standard language**: Terms commonly used in specific industries that relate to job performance
-        - **Company culture descriptions**: "supportive environment", "professional work culture", "team-oriented"
-
-
-        **Scoring Guidelines:**
-        
-        **Clarity Score Deductions (start from 1.0):**
-        - Complex sentences (-0.1 each)
-        - Unclear requirements (-0.15 each)
-        - Excessive jargon (-0.1 each)
-        - Poor organization (-0.2)
-        - Confusing structure (-0.15 each)
-        
-        **Inclusivity Score Deductions (start from 1.0):**
-        - **AUTOMATIC LOW SCORES (0.1-0.2) for explicit discrimination:**
-          * "Male preferred" or "females need not apply" (-0.8)
-          * Racial requirements like "Caucasian background" (-0.8)
-          * Religious discrimination "no religious accommodations" (-0.8)
-          * Age discrimination "young professionals only" (-0.8)
-          - **ONLY deduct for genuinely biased terms that exclude without job relevance:**
-          * Gender-biased terms that stereotype (-0.15 each) - NOT standard professional language
-          * Unnecessary degree requirements for role level (-0.2 each)
-          * Exclusive language without job justification (-0.1 each)
-          * Cultural assumptions unrelated to job (-0.1 each)
-          * Appearance requirements unrelated to role (-0.2 each)
-          * Inappropriate work requirements (-0.3 each)
-
-          **Examples of ACTUAL Discriminatory Language to Penalize:**
-        - **Explicit discrimination**: "male preferred", "Caucasian background", "no religious accommodations"
-        - **Gender stereotyping**: "masculine presence required", "aggressive sales approach", "dominant personality needed"
-        - **Age bias**: "young and energetic required", "recent graduate only", "digital native preferred"
-        - **Cultural bias**: "native speaker only" (when fluency would suffice), "cultural fit" without specifics, "American values required"
-        - **Appearance bias**: "traditional appearance required", "classic look needed", "attractive candidates only"
-        - **Educational elitism**: "Ivy League only", "prestigious university graduates preferred"
-
-        **Examples of LEGITIMATE Professional Language - DO NOT Penalize:**
-        - **Medical roles**: "confident in handling emergency cases", "independent clinical decision-making", "strong diagnostic skills"
-        - **Leadership roles**: "leadership experience", "ability to lead teams", "strong management skills"
-        - **Sales roles**: "competitive salary", "results-driven approach", "strong communication skills"
-        - **General professional**: "dedicated professional", "committed to excellence", "supportive team environment"
-        
-        
-        
-        
-        **Legitimate vs. Discriminatory Requirements:**
-        - **Legitimate**: Hindi teacher requiring Hindi fluency, security guard requiring physical fitness,medical role requiring confidence in patient care, technical role requiring specific certifications
-        - **Discriminatory**: Administrative role requiring "native English speaker", general office job requiring "young and energetic",non-customer facing role requiring specific appearance standards
-        
-        **Context-Aware Evaluation:**
-        - **Medical/Healthcare**: Professional confidence, independence, and clinical skills are job requirements
-        - **Leadership positions**: Management and leadership qualities are legitimate requirements
-        - **Customer-facing roles**: Communication and professional presentation may be legitimate
-        - **Technical roles**: Technical competencies and problem-solving abilities are legitimate
-        - **Educational roles**: Teaching qualifications and subject expertise are legitimate
-
+       
 
         Original Job Description:
         {text}
@@ -308,6 +210,55 @@ class LLMService:
         4. Maintain professional tone while improving inclusivity
         5. DO NOT flag or penalize standard professional language unless clearly discriminatory
         
+        **IMPROVED TEXT FORMATTING REQUIREMENTS:**
+        The improved job description must follow this exact structure and format:
+        
+        **JOB TITLE:** [Clear, specific job title]
+        
+        **COMPANY:** [Company name if provided, otherwise "Company Name"]
+        
+        **INDUSTRY:** [Specific industry/sector]
+        
+        **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
+        
+        **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
+        
+        **JOB SUMMARY:**
+        [6-7 sentences providing an engaging overview of the role and its impact]
+        
+        **KEY RESPONSIBILITIES:**
+        • [Responsibility 1 - action-oriented, specific]
+        • [Responsibility 2 - action-oriented, specific]
+        • [Responsibility 3 - action-oriented, specific]
+        • [Additional responsibilities as needed]
+        
+        **REQUIRED QUALIFICATIONS:**
+        • [Essential qualification 1]
+        • [Essential qualification 2]
+        • [Essential qualification 3]
+        • [Additional essential qualifications]
+        
+        **PREFERRED QUALIFICATIONS:**
+        • [Preferred qualification 1]
+        • [Preferred qualification 2]
+        • [Additional preferred qualifications]
+        
+        **REQUIRED SKILLS:**
+        • [Technical skill 1]
+        • [Technical skill 2]
+        • [Soft skill 1]
+        • [Soft skill 2]
+        • [Additional skills]
+        
+        **WHAT WE OFFER:**
+        • [Benefit 1]
+        • [Benefit 2]
+        • [Benefit 3]
+        • [Additional benefits]
+        
+        **APPLICATION PROCESS:**
+        [Brief, clear instructions on how to apply]
+        
         Return ONLY a valid JSON response (no additional text):
         {{
             "suggestions": [
@@ -318,18 +269,17 @@ class LLMService:
                     "category": "bias|clarity|seo|inclusivity"
                 }}
             ],
-            "improved_text": "complete rewritten job description",
-            "clarity_score": clarity_score,
-            "inclusivity_score": inclusivity_score,
-            "seo_keywords": ["keyword1", "keyword2"]
+            "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+            "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers and bullet point format as specified.]",
+            
+            
         }}
-        **If the provided text is not related to a job description and donot fullfill the requirements of job descriptions then do the following**
+        
+        **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
         Return ONLY a valid JSON response (no additional text):
         {{
-            "suggestions": []
-            "improved_text": "N/A",
-            "clarity_score": N/A,
-            "inclusivity_score": N/A,
+            "suggestions": [],
+            "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
             "seo_keywords": []
         }}
         """
