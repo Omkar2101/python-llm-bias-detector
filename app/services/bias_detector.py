@@ -78,6 +78,7 @@ class BiasDetector:
         #Get the role 
         role = llm_bias_result.get('role')
 
+        original_text = llm_bias_result.get('original_text', text)
         #Get he Industry
         industry = llm_bias_result.get('industry')
         # Get overall assessment
@@ -86,6 +87,7 @@ class BiasDetector:
       
         
         result=BiasAnalysisResult(
+            original_text=original_text,
             role=role,
             industry=industry,
             bias_score=bias_score,

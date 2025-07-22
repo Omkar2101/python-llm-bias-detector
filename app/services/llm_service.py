@@ -87,12 +87,61 @@ class LLMService:
 
         Job Description:
         {text}
+
+         **ORIGINAL JOB TEXT FORMATTING REQUIREMENTS:**
+        The improved job description must follow this exact structure and format:
+        
+        **JOB TITLE:** [Clear, specific job title]
+        
+        **COMPANY:** [Company name if provided, otherwise "Company Name"]
+        
+        **INDUSTRY:** [Specific industry/sector]
+        
+        **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
+        
+        **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
+        
+        **JOB SUMMARY:**
+        [6-7 sentences providing an engaging overview of the role and its impact]
+        
+        **KEY RESPONSIBILITIES:**
+        • [Responsibility 1 - action-oriented, specific]
+        • [Responsibility 2 - action-oriented, specific]
+        • [Responsibility 3 - action-oriented, specific]
+        • [Additional responsibilities as needed]
+        
+        **REQUIRED QUALIFICATIONS:**
+        • [Essential qualification 1]
+        • [Essential qualification 2]
+        • [Essential qualification 3]
+        • [Additional essential qualifications]
+        
+        **PREFERRED QUALIFICATIONS:**
+        • [Preferred qualification 1]
+        • [Preferred qualification 2]
+        • [Additional preferred qualifications]
+        
+        **REQUIRED SKILLS:**
+        • [Technical skill 1]
+        • [Technical skill 2]
+        • [Soft skill 1]
+        • [Soft skill 2]
+        • [Additional skills]
+        
+        **WHAT WE OFFER:**
+        • [Benefit 1]
+        • [Benefit 2]
+        • [Benefit 3]
+        • [Additional benefits]
+        
+        **APPLICATION PROCESS:**
+        [Brief, clear instructions on how to apply]
         
 
             **For job related text, return a structured JSON response:**
             Return ONLY valid JSON:
 
-            {{
+            {{  "original_text": "Take the input job description content and reformat it following the EXACT structure outlined above (JOB TITLE, COMPANY, INDUSTRY, LOCATION, etc.). Use the original content but organize it into the specified format sections. Do not add anything exrta just reformat it",
                 "role": "job title",
                 "industry": "industry name", 
                 "issues": [
@@ -113,7 +162,8 @@ class LLMService:
             }}
 
             **For non-job related text, return this JSON:**
-            {{
+            {{  
+                "original_text": "N/A"
                 "role": "N/A",
                 "industry": "N/A",
                 "issues": [],

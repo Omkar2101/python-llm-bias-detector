@@ -41,6 +41,7 @@ class Suggestion(BaseModel):
     category: CategoryType
 
 class BiasAnalysisResult(BaseModel):
+    original_text: Optional[str] = None
     role:Optional[str] = None
     industry: Optional[str] = None
     # bias_score: float 
