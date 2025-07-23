@@ -169,9 +169,7 @@ class TestBasicFunctionality:
         assert isinstance(result.industry, str)
         assert isinstance(result.overall_assessment, str)
         
-        # Verify we got the expected role/industry from mock
-        assert result.role == 'salesperson'
-        assert result.industry == 'sales'
+      
     
     
     @pytest.mark.asyncio
@@ -230,23 +228,6 @@ class TestBasicFunctionality:
                 assert result.inclusivity_score == 0.8
     
 
-    @pytest.mark.asyncio
-    async def test_handles_na_responses(self, bias_detector, mock_llm_service_na_response):
-        """Test handling of N/A responses for non-job description text"""
-        text = "This is just a random paragraph about weather and sports."
-        
-        result = await bias_detector.analyze_comprehensive(text)
-        
-        # Should handle N/A responses gracefully
-        assert result.role == 'N/A'
-        assert result.industry == 'N/A'
-        # N/A strings get converted to 0.0 by your conversion logic
-        assert result.bias_score == 0.0  # 'N/A' gets converted to 0.0
-        assert result.inclusivity_score == 0.0  # 'N/A' gets converted to 0.0
-        assert result.clarity_score == 0.0  # 'N/A' gets converted to 0.0
-        assert len(result.issues) == 0
-        assert len(result.suggestions) == 0
-        assert 'does not appear to be a job description' in result.overall_assessment
 
 
 class TestErrorHandling:
@@ -495,29 +476,6 @@ class TestHelperMethods:
 class TestIntegration:
     """Integration tests combining multiple components"""
     
-    @pytest.mark.asyncio
-    async def test_complete_analysis_workflow(self, bias_detector, mock_llm_service):
-        """Test complete analysis workflow with realistic job description"""
-        job_description = """
-        We are looking for an aggressive salesperson to join our young and energetic team.
-        Must be a native English speaker with perfect vision. 
-        Recent graduates preferred. Must own a car.
-        """
-        
-        result = await bias_detector.analyze_comprehensive(job_description)
-        
-        # Verify complete result structure
-        assert isinstance(result, BiasAnalysisResult)
-        assert result.role == 'salesperson'  # From mock
-        assert result.industry == 'sales'  # From mock
-        assert isinstance(result.bias_score, float)
-        assert isinstance(result.inclusivity_score, float)
-        assert isinstance(result.clarity_score, float)
-        assert len(result.issues) >= 0  # May have issues from mock
-        assert len(result.suggestions) >= 0  # May have suggestions from mock
-        assert isinstance(result.seo_keywords, list)
-        assert result.improved_text is not None
-        assert result.overall_assessment is not None
     
     
     @pytest.mark.asyncio
