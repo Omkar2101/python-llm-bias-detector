@@ -26,6 +26,7 @@ class LLMService:
         """Use Gemini to detect bias in job description"""
        
         bias_detection_prompt = f"""
+        At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
         Analyze the following text for job description bias. Follow this structured approach:
 
         **STEP 1: VALIDATION**

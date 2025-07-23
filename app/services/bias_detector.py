@@ -24,7 +24,15 @@ class BiasDetector:
             
         except Exception as e:
             print(f"Error in LLM bias detection: {e}")
-            llm_bias_result = {'issues': [], 'bias_score': 0.5}
+            llm_bias_result = {
+        'role': 'Unknown',
+        'industry': 'Unknown', 
+        'issues': [],
+        'bias_score': 0.0,
+        'inclusivity_score': 0.0,
+        'clarity_score': 0.0,
+        'overall_assessment': 'Analysis could not be completed due to service error'
+    }
         
         try:
             # Get LLM analysis for language improvement
@@ -34,10 +42,9 @@ class BiasDetector:
             print(f"Error in LLM improvement: {e}")
             llm_improvement_result = {
                 'suggestions': [], 
-                'clarity_score': 0.0, 
-                'inclusivity_score': 0.0,
+                
                 'seo_keywords': [],
-                'improved_text': None
+                'improved_text': 'Error generating improved text'
             }
         
         # Combine rule-based and LLM results

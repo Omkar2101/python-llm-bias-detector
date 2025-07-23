@@ -1,0 +1,84 @@
+# Continuous Integration (CI) Workflow
+# This workflow runs on every push and pull request to ensure code quality
+# It includes linting, testing, and coverage reporting
+
+name: Continuous Integration (CI)
+
+# Trigger this workflow on:
+# - Push to any of these branches
+# - Pull requests targeting these branches
+on:
+  push:
+    branches: [  main, improvedjob ]
+  pull_request:
+    branches: [  main, improvedjob ]
+
+jobs:
+  # Main CI job that runs code quality checks and tests
+  code-quality-and-tests:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Get the code from the repository
+      - name: Checkout Repository Code
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history for better coverage reporting
+          fetch-depth: 0
+
+      # Step 2: Setup Python environment
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          # Cache pip dependencies for faster builds
+          cache: 'pip'
+
+      # Step 3: Install project dependencies
+      - name: Install Project Dependencies
+        run: |
+          # Upgrade pip to latest version
+          python -m pip install --upgrade pip
+          
+          # Install project requirements
+          pip install -r requirements.txt
+          
+          # Install additional tools needed for CI
+          pip install flake8 pytest pytest-asyncio pytest-cov
+
+      # Step 4: Code linting and style checks
+      - name: Lint Code with Flake8
+        run: |
+          echo "Running flake8 linting..."
+          
+          # Check for critical errors that should fail the build
+          # E9: Runtime errors, F63: Invalid syntax, F7: Syntax errors, F82: Undefined names
+          flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          
+          # General style check (warnings only, won't fail the build)
+          # Max line length: 127 characters, Max complexity: 10
+          flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      # Step 5: Run unit tests with coverage
+      - name: Run Tests with Coverage
+        run: |
+          echo "Running pytest with coverage reporting..."
+          
+          # Run tests with coverage reporting
+          # --cov=app: Generate coverage for the 'app' directory
+          # --cov-report=xml: Generate XML coverage report for uploading
+          # --cov-report=term: Show coverage summary in terminal
+          pytest --cov=app --cov-report=xml --cov-report=term --verbose
+
+      # Step 6: Upload coverage report as artifact
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_number }}
+          path: coverage.xml
+          # Keep artifact for 30 days
+          retention-days: 30
+
+
+  
