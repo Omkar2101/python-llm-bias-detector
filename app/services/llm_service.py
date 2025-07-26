@@ -270,7 +270,7 @@ class LLMService:
                     "category": "clarity|inclusivity"
                 }}
             ],
-            "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+            "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
             "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers and bullet point format as specified.]",
             
             
