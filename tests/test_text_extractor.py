@@ -1,3 +1,4 @@
+
 import pytest
 import io
 from unittest.mock import Mock, patch
@@ -112,6 +113,45 @@ async def test_extract_from_docx():
         assert result.success is True
         assert result.file_type == "docx"
         assert "This is a test document" in result.extracted_text
+
+@pytest.mark.asyncio
+async def test_extract_from_txt():
+    # Create a TextExtractor instance
+    extractor = TextExtractor()
+    
+    # Test with UTF-8 encoded content
+    txt_content = "This is a test text file with UTF-8 content.".encode('utf-8')
+    result = await extractor.extract_from_content(txt_content, "test.txt")
+    assert isinstance(result, TextExtractionResponse)
+    assert result.success is True
+    assert result.file_type == "txt"
+    assert "This is a test text file with UTF-8 content." in result.extracted_text
+
+@pytest.mark.asyncio
+async def test_extract_from_txt_with_special_characters():
+    # Create a TextExtractor instance
+    extractor = TextExtractor()
+    
+    # Test with special characters and UTF-8 encoding
+    txt_content = "Test with special chars: àáâãäå éêë ñ".encode('utf-8')
+    result = await extractor.extract_from_content(txt_content, "test.txt")
+    assert isinstance(result, TextExtractionResponse)
+    assert result.success is True
+    assert result.file_type == "txt"
+    assert "Test with special chars" in result.extracted_text
+
+@pytest.mark.asyncio
+async def test_extract_from_txt_latin1_fallback():
+    # Create a TextExtractor instance
+    extractor = TextExtractor()
+    
+    # Test with latin-1 encoded content
+    txt_content = "Test with latin-1 chars: café résumé".encode('latin-1')
+    result = await extractor.extract_from_content(txt_content, "test.txt")
+    assert isinstance(result, TextExtractionResponse)
+    assert result.success is True
+    assert result.file_type == "txt"
+    assert len(result.extracted_text.strip()) > 0
 
 @pytest.mark.asyncio
 async def test_extract_from_image():
@@ -271,3 +311,22 @@ async def test_static_docx_extraction():
         result = TextExtractor._extract_from_docx(b"mock docx content")
         assert isinstance(result, str)
         assert "Test paragraph" in result
+
+@pytest.mark.asyncio
+async def test_static_txt_extraction():
+    # Test the static TXT extraction method directly
+    txt_content = "Simple text content for testing.".encode('utf-8')
+    
+    result = TextExtractor._extract_from_txt(txt_content)
+    assert isinstance(result, str)
+    assert "Simple text content for testing." in result
+
+@pytest.mark.asyncio
+async def test_static_txt_extraction_unicode_error():
+    # Test the static TXT extraction method with encoding issues
+    # Create content that will cause UTF-8 decode error but work with latin-1
+    txt_content = b'\x80\x81\x82'  # Invalid UTF-8 bytes
+    
+    result = TextExtractor._extract_from_txt(txt_content)
+    assert isinstance(result, str)
+    # Should handle the encoding error gracefully
