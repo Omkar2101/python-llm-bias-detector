@@ -267,7 +267,7 @@ class LLMService:
                     "original": "original phrase",
                     "improved": "improved phrase",
                     "rationale": "why this is better",
-                    "category": "bias|clarity|seo|inclusivity"
+                    "category": "clarity|inclusivity"
                 }}
             ],
             "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
