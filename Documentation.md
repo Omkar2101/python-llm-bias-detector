@@ -1,334 +1,485 @@
-# Job Description Bias Detection API
+# Job Description Bias Detector — Detailed Documentation
 
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](Dockerfile)
+Welcome to the detailed documentation of the **Python LLM Bias Detector** project. This guide provides an in-depth look at each core file, their purpose, how they interrelate, and the overall architecture, including a detailed view of API request handling and service interactions for both text-based and file-based analysis.
 
-An AI-powered service that analyzes job descriptions to detect bias and suggest inclusive language improvements using Google Gemini LLM and rule-based detection.
+---
 
-## 🚀 Features
+## 📑 Index
 
-- **Multi-format Support**: Analyze text from PDFs, DOCX files, images, or plain text
-- **Comprehensive Bias Detection**: Identifies gender, age, racial, cultural, disability, religious, and other biases
-- **Language Improvement**: Provides suggestions for clarity, inclusivity, professionalism, and SEO optimization
-- **Scoring System**: Generates bias, inclusivity, clarity, and readability scores
-- **RESTful API**: Easy-to-integrate FastAPI endpoints
-- **Docker Ready**: Containerized deployment
-- **Robust Testing**: Comprehensive test suite with evaluation harness
+1. [Overview](#overview)  
+2. [Core Application Files](#core-application-files)  
+   - [app/models/schemas.py](#appmodelsschemspy)  
+   - [app/services/bias_detector.py](#appservicesbias_detectorpy)  
+   - [app/services/llm_service.py](#appservicesllm_servicepy)  
+   - [app/services/text_extractor.py](#appservicestext_extractorpy)  
+   - [app/utils/helpers.py](#apputilshelperspy)  
+   - [app/main.py](#appmainpy)  
+3. [Testing Suite](#testing-suite)  
+   - [`tests/.coverage`](#testsscoverage)  
+   - [`tests/__init__.py`](#testsinitpy)  
+   - [`tests/test_bias_detector.py`](#teststest_bias_detectorpy)  
+   - [`tests/test_llm_service.py`](#teststest_llm_servicepy)  
+   - [`tests/test_main.py`](#teststest_mainpy)  
+   - [`tests/test_text_extractor.py`](#teststest_text_extractorpy)  
+4. [Configuration & Infrastructure](#configuration--infrastructure)  
+   - [Dockerfile](#dockerfile)  
+   - [pyproject.toml](#pyprojecttoml)  
+   - [requirements.txt](#requirementstxt)  
+   - [.dockerignore](#dockerignore)  
+5. [Original Documentation](#original-documentation)  
+6. [Detailed Request Flow & Architecture](#detailed-request-flow--architecture)  
+    - [Text Analysis Request Flow](#text-analysis-request-flow)
+    - [File Analysis Request Flow](#file-analysis-request-flow)
+---
 
-## 📋 Table of Contents
+## Overview
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [API Documentation](#api-documentation)
-- [Configuration](#configuration)
-- [Architecture](#architecture)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+This project offers a **FastAPI**-powered REST API to analyze job descriptions for potential biases using a combination of:
 
-## 🛠️ Installation
+- **Google Gemini LLM**-powered prompts for bias detection and language improvement  
+- **Rule-based parsing** and **fallbacks**  
+- **Multi-format text extraction** (PDF, DOCX, TXT, Image OCR)  
 
-### Prerequisites
+Results include bias scores, detailed findings, inclusive rewriting suggestions, SEO keywords, and an overall assessment.
 
-- Python 3.10+
-- Google Gemini API key
-- Docker (optional, for containerized deployment)
+---
 
-### Local Development
+## Core Application Files
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/job-bias-detector.git
-   cd job-bias-detector
-   ```
+### app/models/schemas.py
 
-2. **Create virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+Defines all **Pydantic** models and Enums for request/response validation:
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+- **Enums**  
+  - `BiasType` (gender, age, racial, cultural, …)  
+  - `SeverityLevel` (low, medium, high)  
+  - `CategoryType` (bias, clarity, SEO, inclusivity, professionalism, legal)  
 
-4. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your GOOGLE_GEMINI_API_KEY
-   ```
+- **Models**  
+  - `BiasIssue` (type, text span, severity, explanation)  
+  - `Suggestion` (original vs. improved text, rationale, category)  
+  - `BiasAnalysisResult` (role, industry, scores, issues, suggestions, keywords, improved_text, overall_assessment)  
+  - `AnalyzeRequest` (input text)  
+  - `TextExtractionResponse` (success flag, extracted_text, file_type, error_message)  
+  - `AnalyzeFileResponse` (bundles extraction + analysis)  
 
-5. **Run the application**
-   ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-   ```
+These schemas ensure consistent payloads across API endpoints and internal service layers.
 
-### Docker Deployment
+---
 
-```bash
-# Build the image
-docker build -t job-bias-detector .
+### app/services/bias_detector.py
 
-# Run the container
-docker run -p 8000:8000 -e GOOGLE_GEMINI_API_KEY=your_api_key job-bias-detector
+Implements the **bias analysis workflow**:
+
+- **Dependencies**  
+  - `LLMService` for LLM calls  
+  - `textstat` (optional rule-based metrics)  
+
+- **Key Method**  
+  - `analyze_comprehensive(text: str) → BiasAnalysisResult`  
+    1. Calls `LLMService.detect_bias(text)` to identify issues and base scores.  
+    2. Calls `LLMService.improve_language(text)` to generate rewriting suggestions, SEO keywords, and improved text.  
+    3. Parses and converts LLM JSON responses via private helpers:  
+       - `_parse_llm_issues(...)` → [`BiasIssue`]  
+       - `_parse_llm_suggestions(...)` → [`Suggestion`]  
+       - `_parse_category(...)` to handle “pipe-separated” categories  
+    4. Converts string scores to floats with safe fallbacks.  
+    5. Returns a fully populated `BiasAnalysisResult`, gracefully handling LLM failures with default values.
+
+- **Extensible Points**  
+  - Placeholder for additional rule-based detection (`_detect_rule_based_bias`).  
+  - Hooks for custom scoring or metrics via `textstat`.
+
+---
+
+### app/services/llm_service.py
+
+Wraps interactions with the **Google Gemini** LLM:
+
+- **Initialization**  
+  - Loads `.env` variables (`GOOGLE_GEMINI_API_KEY`)  
+  - Configures `google.generativeai` and instantiates `gemini-2.0-flash` model  
+
+- **Prompts & Methods**  
+  - `detect_bias(text: str) → Dict`  
+    - Constructs a multi-step prompt: validation, context analysis, bias detection (with examples), scoring rules.  
+    - Calls `model.generate_content(...)` and strips markdown to parse JSON.  
+    - Returns parsed bias JSON.  
+
+  - `improve_language(text: str) → Dict`  
+    - Builds a rewrite prompt emphasizing clarity, inclusivity, professionalism, SEO.  
+    - Invokes LLM and parses JSON.  
+
+- **Error Handling**  
+  - Detects common errors (503 overloaded, quota/limit, timeout, authentication) and raises `HTTPException` with appropriate status codes.  
+  - Generic fallback for unexpected errors.
+
+---
+
+### app/services/text_extractor.py
+
+Handles **multi-format content extraction**:
+
+- **Supported Types**:  
+  - **Image** (`jpg`, `png`, …) via **EasyOCR**  
+  - **PDF** via **pypdf**  
+  - **DOCX** via **python-docx**  
+  - **TXT** (UTF-8 with Latin-1 fallback)  
+
+- **Method**  
+  - `extract_from_content(content: bytes, filename: str) → TextExtractionResponse`  
+    1. Derives extension.  
+    2. Routes to one of:  
+       - `_extract_from_image(...)`  
+       - `_extract_from_pdf(...)`  
+       - `_extract_from_docx(...)`  
+       - `_extract_from_txt(...)`  
+    3. Returns `success`, `extracted_text`, `file_type`, or error.
+
+- **Failure Cases**  
+  - Unsupported file types  
+  - Parsing errors (caught and returned as `success=False` with `error_message`)
+
+---
+
+
+
+### app/main.py
+
+Defines **FastAPI** application and routes:
+
+- **Initialization**  
+  - `load_dotenv()`  
+  - Global CORS enabled for local front-ends.  
+  - Instantiates `TextExtractor` and `BiasDetector`.  
+
+- **Exception Handlers**  
+  - Custom JSON format for `HTTPException` and generic exceptions with user-friendly `type` via `get_error_type(status_code)`.
+
+- **Endpoints**  
+  - `GET /` — Service health check.  
+  - `GET /health` — Detailed health.  
+  - `POST /extract` — Raw text extraction from file upload.  
+  - `POST /analyze` — Bias analysis of JSON text (`AnalyzeRequest` → `BiasAnalysisResult`).  
+  - `POST /analyze-file` — Combined extract + analyze convenience endpoint (`AnalyzeFileResponse`).
+
+- **Validation**  
+  - Minimum text length (50 chars) enforced on `/analyze`.
+
+---
+
+## Testing Suite
+
+### tests/.coverage
+
+Coverage database (SQLite).  
+_Not part of source logic; generated by `pytest --cov`._
+
+### tests/__init__.py
+
+Package marker for pytest; typically empty.
+
+### tests/test_bias_detector.py
+
+Unit tests for `BiasDetector`, covering:
+
+- Basic structure and schema compliance.  
+- String → float score conversions.  
+- Error fallbacks when LLM calls fail.  
+- Parsing edge cases for issues and suggestions.  
+- Category parsing logic.
+
+### tests/test_llm_service.py
+
+Tests for `LLMService`:
+
+- Initialization behavior with/without API key.  
+- JSON extraction from markdown-wrapped responses.  
+- Error handling (503, quota, timeout, authentication, generic).
+
+### tests/test_main.py
+
+Integration tests for API endpoints:
+
+- Root and health endpoints.  
+- `/extract` validations (no file, empty, too large, missing filename).  
+- `/analyze` validations (short text, missing field, exception paths).  
+- `/analyze-file` end-to-end flows with mocked extractor & detector.
+
+### tests/test_text_extractor.py
+
+Validation of `TextExtractor` methods:
+
+- PDF, DOCX, TXT, and Image extraction (both real and mocked).  
+- Encoding fallback for Latin-1.  
+- Error reporting on invalid content.
+
+---
+
+## Configuration & Infrastructure
+
+### Dockerfile
+
+Containerizes the app:
+
+- Base: `python:3.10-slim`  
+- Installs system libs (`build-essential`, `libpq-dev`).  
+- Copies `requirements.txt` → `pip install`.  
+- Adds non-root `appuser`.  
+- Exposes port `8000`.  
+- Entrypoint: `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
+
+### pyproject.toml
+
+Pytest configuration:
+
+```toml
+[tool.pytest.ini_options]
+testpaths   = ["tests"]
+python_files = ["test_*.py"]
+addopts     = "-v --cov=app --cov-report=term-missing"
+asyncio_mode = "auto"
 ```
 
-## 🚀 Quick Start
+### requirements.txt
 
-### Basic Text Analysis
-
-```python
-import requests
-
-# Analyze job description text
-response = requests.post("http://localhost:8000/analyze", 
-    json={"text": "We're looking for a rockstar developer who can work long hours..."})
-    
-result = response.json()
-print(f"Bias Score: {result['bias_score']}")
-print(f"Issues Found: {len(result['issues'])}")
-```
-
-### File Upload Analysis
-
-```python
-# Analyze a PDF job description
-with open("job_description.pdf", "rb") as f:
-    response = requests.post("http://localhost:8000/analyze-file",
-        files={"file": f})
-        
-result = response.json()
-print(f"Extracted Text: {result['extracted_text'][:100]}...")
-print(f"Bias Analysis: {result['analysis']['overall_assessment']}")
-```
-
-## 📚 API Documentation
-
-### Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Welcome message |
-| `GET` | `/health` | Health check |
-| `POST` | `/analyze` | Analyze plain text |
-| `POST` | `/analyze-file` | Upload and analyze file |
-| `POST` | `/extract` | Extract text from file |
-
-### Example Request/Response
-
-**POST /analyze**
-
-```json
-{
-  "text": "Looking for a young, energetic developer who can work in our fast-paced environment..."
-}
-```
-
-**Response:**
-```json
-{
-  "role": "Developer",
-  "industry": "Technology",
-  "bias_score": 0.6,
-  "inclusivity_score": 0.4,
-  "clarity_score": 0.7,
-  "issues": [
-    {
-      "type": "age",
-      "severity": "medium",
-      "text": "young, energetic",
-      "explanation": "Age-related terms that may discourage older candidates",
-      
-    }
-  ],
-  "suggestions": [
-    {
-      "category": "inclusivity",
-      "original": "young, energetic developer",
-      "improved": "motivated developer",
-      "explanation": "Removes age bias while maintaining intent"
-    }
-  ],
-  "improved_text": "Looking for a motivated developer who can work in our dynamic environment...",
-  "seo_keywords": ["developer", "technology", "programming"],
-  "overall_assessment": "Moderate bias detected. Consider revising age-related language."
-}
-```
-
-For complete API documentation, visit `http://localhost:8000/docs` after starting the server.
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-# Required
-GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
-
-# Optional
-LOG_LEVEL=INFO
-MAX_FILE_SIZE=10485760  # 10MB in bytes
-```
-
-### Supported File Formats
-
-- **PDF**: `.pdf`
-- **Word Documents**: `.docx`
-- **Images**: `.png`, `.jpg`, `.jpeg` (OCR using Tesseract)
-- **Text**: `.txt`
-
-## 🏗️ Architecture
-
-### Project Structure
+Pinning dependencies:
 
 ```
-job-bias-detector/
-├── app/
-│   ├── main.py              # FastAPI application
-│   ├── models/
-│   │   └── schemas.py       # Pydantic models
-│   ├── services/
-│   │   ├── bias_detector.py # Core bias detection logic
-│   │   ├── llm_service.py   # Google Gemini integration
-│   │   └── text_extractor.py # File processing
-│   └── utils/
-│       └── helpers.py       # Utility functions
-├── tests/                   # Test suite
-├── Dockerfile              # Container configuration
-├── requirements.txt        # Python dependencies
-└── README.md              # This file
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+pydantic==2.5.0
+google-generativeai==0.3.2
+python-dotenv==1.0.0
+pypdf==5.8.0
+python-docx==1.1.0
+Pillow==10.1.0
+transformers==4.36.0
+nltk==3.8.1
+textstat==0.7.3
+requests==2.31.0
+easyocr
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.1
 ```
 
-### Technology Stack
+### .dockerignore
 
-- **Backend**: FastAPI, Python 3.10+
-- **AI/ML**: Google Gemini API, textstat
-- **File Processing**: PyPDF2, python-docx, Pillow, pytesseract
-- **Testing**: pytest, FastAPI TestClient
-- **Deployment**: Docker, Uvicorn
+Optimizes Docker builds by excluding:
 
-### Data Flow
+```
+__pycache__/
+*.py[cod]
+*.so
+venv/
+.env*
+.idea/
+.vscode/
+*.log
+htmlcov/
+dist/
+.DS_Store
+```
+
+---
+
+## Original Documentation (Documentation.md)
+
+This file provides quickstart instructions, feature overview, installation steps, and sample API usage. It serves as the user-facing README.
+
+---
+
+## Detailed Request Flow & Architecture
+
+Below are architecture diagrams for the two main user flows: **Text Analysis** and **File Analysis**. These diagrams illustrate every processing step, showing which endpoints are called, the internal service interactions, and the round-trip with the LLM service.
+
+---
+
+### Text Analysis Request Flow
 
 ```mermaid
-graph TD
-    Client[Client] -->|POST /analyze-file with UploadFile| API[FastAPI App]
-    
-    subgraph "File Processing"
-        API -->|extract_from_content| TE[TextExtractor]
-        TE -->|Read file content| FileReaders{File Type?}
-        FileReaders -->|PDF| PDF[PdfReader - pypdf]
-        FileReaders -->|DOCX| DOCX[Document - docx]
-        FileReaders -->|TXT| TXT[decode content]
-        FileReaders -->|Image| OCR[EasyOCR Reader]
-        PDF --> TE
-        DOCX --> TE
-        TXT --> TE
-        OCR --> TE
-        TE -->|TextExtractionResponse| API
-    end
-    
-    subgraph "Bias Analysis"
-        API -->|AnalyzeRequest| BD[BiasDetector]
-        BD -->|analyze_comprehensive| LLM1[detect_bias]
-        BD -->|analyze_comprehensive| LLM2[improve_language]
-        
-        LLM1 -->|LLMService| GeminiAPI1[Google Gemini API<br/>bias_detection_prompt]
-        LLM2 -->|LLMService| GeminiAPI2[Google Gemini API<br/>improvement_prompt]
-        
-        GeminiAPI1 -->|JSON Response| Parser1[_parse_llm_issues]
-        GeminiAPI2 -->|JSON Response| Parser2[_parse_llm_suggestions]
-        
-        Parser1 --> BD
-        Parser2 --> BD
-        
-        BD -->|BiasAnalysisResult| API
-    end
-    
-    subgraph "Response Processing"
-        API -->|Combine results| Response[AnalyzeFileResponse]
-        Response --> Client
-    end
-    
-    subgraph "Data Models"
-        Schemas[schemas.py<br/>- BiasAnalysisResult<br/>- BiasIssue<br/>- Suggestion<br/>- TextExtractionResponse<br/>- AnalyzeFileResponse]
-    end
-    
-    subgraph "Error Handling"
-        API -.->|HTTPException| ErrorHandler[Global Exception Handlers]
-        ErrorHandler -.->|JSONResponse| Client
-    end
-    
-    %% Styling
-    classDef apiClass fill:#e1f5fe
-    classDef serviceClass fill:#f3e5f5
-    classDef externalClass fill:#fff3e0
-    classDef dataClass fill:#e8f5e8
-    
-    class API apiClass
-    class TE,BD serviceClass
-    class GeminiAPI1,GeminiAPI2,PDF,DOCX,OCR externalClass
-    class Schemas,Response dataClass
+sequenceDiagram
+    participant User as User (Client)
+    participant API as FastAPI app/main.py
+    participant BiasDetector as BiasDetector Service
+    participant LLMService as LLM Service (Google Gemini)
+    Note over User,API: Submit job description as text
+    User->>API: POST /analyze (JSON: {"text": ...})
+    Note over API: Validate request, check text length
+    API->>BiasDetector: analyze_comprehensive(text)
+    BiasDetector->>LLMService: detect_bias(text)
+    LLMService->>BiasDetector: JSON with bias issues, scores
+    BiasDetector->>LLMService: improve_language(text)
+    LLMService->>BiasDetector: JSON with suggestions, SEO, improved text
+    BiasDetector-->>API: BiasAnalysisResult (with issues, suggestions, etc.)
+    API-->>User: JSON result (BiasAnalysisResult)
 ```
 
-## 🧪 Testing
+#### Detailed Steps:
 
-### Run Tests
+1. **User** sends a `POST /analyze` request with a JSON body containing the job description text.
+2. **FastAPI app** receives and validates the request (minimum length, JSON schema).
+3. The **BiasDetector** service's `analyze_comprehensive` method is called with the text.
+4. **BiasDetector**:
+    - Calls **LLMService**'s `detect_bias` to obtain bias issues and scores.
+    - Calls **LLMService**'s `improve_language` to get suggestions, keywords, and improved text.
+5. **LLMService** interacts with the Google Gemini LLM, parsing and returning JSON responses.
+6. **BiasDetector** processes, merges, and formats results into a `BiasAnalysisResult` object.
+7. **API** responds to the user with the formatted JSON.
 
-```bash
-# Run all tests
-pytest
+---
 
-# Run with coverage
-pytest --cov=app --cov-report=html
+### File Analysis Request Flow
 
-# Run specific test file
-pytest tests/test_bias_detector.py -v
+```mermaid
+sequenceDiagram
+    participant User as User (Client)
+    participant API as FastAPI app/main.py
+    participant TextExtractor as TextExtractor Service
+    participant BiasDetector as BiasDetector Service
+    participant LLMService as LLM Service (Google Gemini)
+    Note over User,API: Uploads a file (PDF/DOCX/TXT/Image)
+    User->>API: POST /analyze-file (multipart/form-data: file)
+    API->>TextExtractor: extract_from_content(file bytes, filename)
+    alt Extraction Success
+        TextExtractor-->>API: TextExtractionResponse (extracted_text)
+        API->>BiasDetector: analyze_comprehensive(extracted_text)
+        BiasDetector->>LLMService: detect_bias(extracted_text)
+        LLMService->>BiasDetector: JSON with bias issues, scores
+        BiasDetector->>LLMService: improve_language(extracted_text)
+        LLMService->>BiasDetector: JSON with suggestions, SEO, improved text
+        BiasDetector-->>API: BiasAnalysisResult
+        API-->>User: AnalyzeFileResponse (extracted_text + analysis)
+    else Extraction Failure
+        TextExtractor-->>API: TextExtractionResponse (success=False, error)
+        API-->>User: AnalyzeFileResponse (error_message)
+    end
 ```
 
-### Test Coverage
+#### Detailed Steps:
 
-The project maintains comprehensive test coverage including:
+1. **User** sends a `POST /analyze-file` request with a file upload (PDF, DOCX, TXT, or image).
+2. **FastAPI app** receives and validates the file.
+3. The **TextExtractor** service's `extract_from_content` method is called with the file bytes and filename.
+4. Depending on filetype, **TextExtractor** applies OCR or format-specific parsing to extract text.
+    - If extraction is **successful**, the extracted text is passed to the **BiasDetector** service, following the same analysis process as in the text flow.
+    - If extraction **fails**, an error response is returned to the user.
+5. **BiasDetector** and **LLMService** interaction proceeds identically to the text workflow.
+6. **API** responds to the user with both the extracted text and the bias analysis result.
 
-- Unit tests for all services and utilities
-- Integration tests for API endpoints
-- End-to-end evaluation with predefined test cases
-- Error handling and edge cases
+---
 
-### Evaluation
+### Component Interaction Overview
 
-Run the model evaluation suite:
+```mermaid
+flowchart TB
+  User["User (Client)"]
+  MainApp["FastAPI App (app/main.py)"]
+  TextExt["TextExtractor"]
+  BiasDet["BiasDetector"]
+  LLM["LLMService (Google Gemini)"]
 
-```bash
-python -m tests.evaluation.test_model_evaluation
+  User --|POST /analyze|--> MainApp
+  MainApp --|text|--> BiasDet
+  BiasDet -- LLM
+  BiasDet -.-> MainApp
+  MainApp -.-> User
+
+  User --|POST /analyze-file|--> MainApp
+  MainApp -- file --> TextExt
+  TextExt -- extracted_text --> MainApp
+  MainApp --|text|--> BiasDet
+
+  classDef api fill:#e1f5fe,stroke:#036
+  classDef svc fill:#f3e5f5,stroke:#620
+  classDef llm fill:#fff3e0,stroke:#a60
+  class User,MainApp api
+  class TextExt svc
+  class BiasDet svc
+  class LLM llm
 ```
 
-Results are saved in `tests/evaluation/results/` for analysis.
+---
 
-## 🤝 Contributing
+## API Endpoints
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+### Analyze Text Endpoint
 
-### Development Setup
+```api
+{
+    "title": "Analyze Text for Bias",
+    "description": "Analyzes job description text for bias, clarity, inclusivity, and provides rewriting suggestions and SEO keywords.",
+    "method": "POST",
+    "baseUrl": "http://localhost:8000",
+    "endpoint": "/analyze",
+    "headers": [
+        {
+            "key": "Content-Type",
+            "value": "application/json",
+            "required": true
+        }
+    ],
+    "queryParams": [],
+    "pathParams": [],
+    "bodyType": "json",
+    "requestBody": "{\n  \"text\": \"We are looking for a dynamic young professional to join our team...\"\n}",
+    "formData": [],
+    "responses": {
+        "200": {
+            "description": "Bias analysis result",
+            "body": "{\n  \"role\": \"...\",\n  \"industry\": \"...\",\n  \"bias_scores\": {\"gender\": 0.2, \"age\": 0.1},\n  \"clarity_score\": 0.8,\n  \"seo_score\": 0.7,\n  \"issues\": [...],\n  \"suggestions\": [...],\n  \"keywords\": [\"dynamic\", \"professional\"],\n  \"improved_text\": \"...\",\n  \"overall_assessment\": \"...\"\n}"
+        },
+        "422": {
+            "description": "Validation Error",
+            "body": "{\n  \"detail\": [ {\"msg\": \"field required\", \"type\": \"value_error.missing\"} ]\n}"
+        }
+    }
+}
+```
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and add tests
-4. Run the test suite: `pytest`
-5. Submit a pull request
+### Analyze File Endpoint
 
-### Code Style
+```api
+{
+    "title": "Analyze File for Bias",
+    "description": "Extracts text from an uploaded file (PDF, DOCX, TXT, or image) and analyzes it for bias, clarity, inclusivity, and provides rewriting suggestions and SEO keywords.",
+    "method": "POST",
+    "baseUrl": "http://localhost:8000",
+    "endpoint": "/analyze-file",
+    "headers": [
+        {
+            "key": "Content-Type",
+            "value": "multipart/form-data",
+            "required": true
+        }
+    ],
+    "queryParams": [],
+    "pathParams": [],
+    "bodyType": "form",
+    "requestBody": "",
+    "formData": [
+        {
+            "key": "file",
+            "value": "The job description file to analyze",
+            "required": true
+        }
+    ],
+    "responses": {
+        "200": {
+            "description": "Extracted text and bias analysis result",
+            "body": "{\n  \"extracted_text\": \"...\",\n  \"file_type\": \"pdf\",\n  \"bias_analysis\": { ... },\n  \"error_message\": null\n}"
+        },
+        "400": {
+            "description": "File extraction or validation error",
+            "body": "{\n  \"extracted_text\": null,\n  \"file_type\": null,\n  \"bias_analysis\": null,\n  \"error_message\": \"Unsupported file type or extraction error\"\n}"
+        }
+    }
+}
+```
 
-- Follow PEP 8
-- Use type hints
-- Add docstrings for public functions
-- Maintain test coverage above 80%
+---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
+**End of Documentation**
