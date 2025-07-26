@@ -6,6 +6,8 @@ from app.models.schemas import BiasIssue, Suggestion, BiasType, SeverityLevel, C
 from fastapi import HTTPException
 import time
 from dotenv import load_dotenv
+import json
+import re
 
 class LLMService:
     def __init__(self):
@@ -21,9 +23,30 @@ class LLMService:
         # Configure Google Gemini
         genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
         self.model = genai.GenerativeModel('gemini-2.0-flash')
+
+    
+    def preprocess_text_for_llm(self,text: str) -> str:
+        """
+        Preprocess text to handle problematic characters for LLM processing
+        """
+        # Replace smart quotes with regular quotes
+        text = text.replace('"', '"').replace('"', '"')
+        text = text.replace(''', "'").replace(''', "'")
+        
+        # Escape existing quotes
+        text = text.replace('"', '\\"')
+        
+        # Normalize whitespace and line breaks
+        text = re.sub(r'\s+', ' ', text)  # Replace multiple spaces with single space
+        text = text.replace('\n', ' ')    # Replace newlines with spaces
+        text = text.strip()
+        
+        return text
     
     async def detect_bias(self, text: str) -> Dict:
         """Use Gemini to detect bias in job description"""
+         # Preprocess the text to handle problematic characters
+        cleaned_text = self.preprocess_text_for_llm(text)
        
         bias_detection_prompt = f"""
         At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
@@ -87,7 +110,7 @@ class LLMService:
         **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
 
         Job Description:
-        {text}
+        {cleaned_text}
         
 
             **For job related text, return a structured JSON response:**
@@ -188,6 +211,9 @@ class LLMService:
     
     async def improve_language(self, text: str) -> Dict:
         """Use Gemini to suggest language improvements"""
+
+        # Preprocess the text to handle problematic characters
+        cleaned_text = self.preprocess_text_for_llm(text)
         
         improvement_prompt = f"""
         **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
@@ -202,7 +228,7 @@ class LLMService:
        
 
         Original Job Description:
-        {text}
+        {cleaned_text}
 
         **Analysis Instructions:**
         1. Identify job role and industry context first
@@ -315,6 +341,12 @@ class LLMService:
            
             
             result = json.loads(response_text)
+
+            # Additional cleanup: Remove any remaining Markdown formatting from improved_text
+            if 'improved_text' in result:
+            # Remove ** formatting
+                result['improved_text'] = result['improved_text'].replace('**', '')
+
             print(f"Cleaned result from improve language: {result}")
             return result
             
