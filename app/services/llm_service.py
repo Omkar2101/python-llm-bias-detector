@@ -189,101 +189,201 @@ class LLMService:
     async def improve_language(self, text: str) -> Dict:
         """Use Gemini to suggest language improvements"""
         
-        improvement_prompt = f"""
-        **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
+        # improvement_prompt = f"""
+        # **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
         
-        Improve the following job description for:
-        1. Clarity and readability
-        2. Inclusive language
-        3. Brevity and conciseness
-        4. Professional tone
-        5. SEO optimization with relevant keywords (Suggest the keywords that are relevant to the job description and not present in the current text)
+        # Improve the following job description for:
+        # 1. Clarity and readability
+        # 2. Inclusive language
+        # 3. Brevity and conciseness
+        # 4. Professional tone
+        # 5. SEO optimization with relevant keywords (Suggest the keywords that are relevant to the job description and not present in the current text)
         
        
 
-        Original Job Description:
-        {text}
+        # Original Job Description:
+        # {text}
 
-        **Analysis Instructions:**
-        1. Identify job role and industry context first
-        2. Distinguish between legitimate professional requirements and actual bias
-        3. Only suggest improvements for genuinely problematic language
-        4. Maintain professional tone while improving inclusivity
-        5. DO NOT flag or penalize standard professional language unless clearly discriminatory
+        # **Analysis Instructions:**
+        # 1. Identify job role and industry context first
+        # 2. Distinguish between legitimate professional requirements and actual bias
+        # 3. Only suggest improvements for genuinely problematic language
+        # 4. Maintain professional tone while improving inclusivity
+        # 5. DO NOT flag or penalize standard professional language unless clearly discriminatory
+        # 6.Suggest the keywords that are relevant to the job description and not present in the  Original Job Description
+        # 7.Frame the sentences using the  seo_keywords that you have found in the previous step and use them in the improved text(remove the markdowns ** from the words before adding them and then add).
         
-        **IMPROVED TEXT FORMATTING REQUIREMENTS:**
-        The improved job description must follow this exact structure and format:
+        # **IMPROVED TEXT FORMATTING REQUIREMENTS:**
+        # The improved job description must follow this exact structure and format:
         
-        **JOB TITLE:** [Clear, specific job title]
+        # **JOB TITLE:** [Clear, specific job title]
         
-        **COMPANY:** [Company name if provided, otherwise "Company Name"]
+        # **COMPANY:** [Company name if provided, otherwise "Company Name"]
         
-        **INDUSTRY:** [Specific industry/sector]
+        # **INDUSTRY:** [Specific industry/sector]
         
-        **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
+        # **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
         
-        **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
+        # **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
         
-        **JOB SUMMARY:**
-        [6-7 sentences providing an engaging overview of the role and its impact]
+        # **JOB SUMMARY:**
+        # [6-7 sentences providing an engaging overview of the role and its impact]
         
-        **KEY RESPONSIBILITIES:**
-        • [Responsibility 1 - action-oriented, specific]
-        • [Responsibility 2 - action-oriented, specific]
-        • [Responsibility 3 - action-oriented, specific]
-        • [Additional responsibilities as needed]
+        # **KEY RESPONSIBILITIES:**
+        # • [Responsibility 1 - action-oriented, specific]
+        # • [Responsibility 2 - action-oriented, specific]
+        # • [Responsibility 3 - action-oriented, specific]
+        # • [Additional responsibilities as needed]
         
-        **REQUIRED QUALIFICATIONS:**
-        • [Essential qualification 1]
-        • [Essential qualification 2]
-        • [Essential qualification 3]
-        • [Additional essential qualifications]
+        # **REQUIRED QUALIFICATIONS:**
+        # • [Essential qualification 1]
+        # • [Essential qualification 2]
+        # • [Essential qualification 3]
+        # • [Additional essential qualifications]
         
-        **PREFERRED QUALIFICATIONS:**
-        • [Preferred qualification 1]
-        • [Preferred qualification 2]
-        • [Additional preferred qualifications]
+        # **PREFERRED QUALIFICATIONS:**
+        # • [Preferred qualification 1]
+        # • [Preferred qualification 2]
+        # • [Additional preferred qualifications]
         
-        **REQUIRED SKILLS:**
-        • [Technical skill 1]
-        • [Technical skill 2]
-        • [Soft skill 1]
-        • [Soft skill 2]
-        • [Additional skills]
+        # **REQUIRED SKILLS:**
+        # • [Technical skill 1]
+        # • [Technical skill 2]
+        # • [Soft skill 1]
+        # • [Soft skill 2]
+        # • [Additional skills]
         
-        **WHAT WE OFFER:**
-        • [Benefit 1]
-        • [Benefit 2]
-        • [Benefit 3]
-        • [Additional benefits]
+        # **WHAT WE OFFER:**
+        # • [Benefit 1]
+        # • [Benefit 2]
+        # • [Benefit 3]
+        # • [Additional benefits]
         
-        **APPLICATION PROCESS:**
-        [Brief, clear instructions on how to apply]
+        # **APPLICATION PROCESS:**
+        # [Brief, clear instructions on how to apply]
         
-        Return ONLY a valid JSON response (no additional text):
-        {{
-            "suggestions": [
+        # Return ONLY a valid JSON response (no additional text and extra markdowns):
+        # {{
+        #     "suggestions": [
+        #         {{
+        #             "original": "original phrase",
+        #             "improved": "improved phrase",
+        #             "rationale": "why this is better",
+        #             "category": "clarity|inclusivity"
+        #         }}
+        #     ],
+        #     "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+        #     "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers and bullet point format as specified.]",
+            
+            
+        # }}
+        
+        # **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
+        # Return ONLY a valid JSON response (no additional text):
+        # {{
+        #     "suggestions": [],
+        #     "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
+        #     "seo_keywords": []
+        # }}
+        # """
+        improvement_prompt = f"""
+                **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
+                
+                Improve the following job description for:
+                1. Clarity and readability
+                2. Inclusive language
+                3. Brevity and conciseness
+                4. Professional tone
+                5. SEO optimization with relevant keywords (Suggest ONLY keywords that are relevant to the job description and are STRICTLY NOT present anywhere in the original text - perform thorough analysis to ensure complete absence)
+                
+            
+
+                Original Job Description:
+                {text}
+
+                **Analysis Instructions:**
+                1. Identify job role and industry context first
+                2. Distinguish between legitimate professional requirements and actual bias
+                3. Only suggest improvements for genuinely problematic language
+                4. Maintain professional tone while improving inclusivity
+                5. DO NOT flag or penalize standard professional language unless clearly discriminatory
+                6.Suggest ONLY keywords that are relevant to the job description and are STRICTLY NOT present in the Original Job Description - analyze the original text thoroughly to ensure none of the suggested keywords appear anywhere in the original content
+                7.Frame the sentences using the seo_keywords that you have found in the previous step and use them in the improved text. CRITICAL: When incorporating these keywords into the text, write them as plain text without any ** or * formatting. For example, if the keyword is "Patient Care", write it as "Patient Care" NOT as "**Patient Care**". IMPORTANT: Only use keywords that are completely absent from the original job description.
+                8. DO NOT use any markdown formatting (**, *, etc.) within the content text - ONLY use ** for the section headers as specified in the format below. All keywords and content must be written in plain text without any bold or italic formatting.
+                
+                **IMPROVED TEXT FORMATTING REQUIREMENTS:**
+                The improved job description must follow this exact structure and format (keep the ** around section headers):
+                
+                **JOB TITLE:** [Clear, specific job title]
+                
+                **COMPANY:** [Company name if provided, otherwise "Company Name"]
+                
+                **INDUSTRY:** [Specific industry/sector]
+                
+                **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
+                
+                **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
+                
+                **JOB SUMMARY:**
+                [6-7 sentences providing an engaging overview of the role and its impact]
+                
+                **KEY RESPONSIBILITIES:**
+                • [Responsibility 1 - action-oriented, specific]
+                • [Responsibility 2 - action-oriented, specific]
+                • [Responsibility 3 - action-oriented, specific]
+                • [Additional responsibilities as needed]
+                
+                **REQUIRED QUALIFICATIONS:**
+                • [Essential qualification 1]
+                • [Essential qualification 2]
+                • [Essential qualification 3]
+                • [Additional essential qualifications]
+                
+                **PREFERRED QUALIFICATIONS:**
+                • [Preferred qualification 1]
+                • [Preferred qualification 2]
+                • [Additional preferred qualifications]
+                
+                **REQUIRED SKILLS:**
+                • [Technical skill 1]
+                • [Technical skill 2]
+                • [Soft skill 1]
+                • [Soft skill 2]
+                • [Additional skills]
+                
+                **WHAT WE OFFER:**
+                • [Benefit 1]
+                • [Benefit 2]
+                • [Benefit 3]
+                • [Additional benefits]
+                
+                **APPLICATION PROCESS:**
+                [Brief, clear instructions on how to apply]
+                
+                Return ONLY a valid JSON response (no additional text and extra markdowns):
                 {{
-                    "original": "original phrase",
-                    "improved": "improved phrase",
-                    "rationale": "why this is better",
-                    "category": "clarity|inclusivity"
+                    "suggestions": [
+                        {{
+                            "original": "original phrase",
+                            "improved": "improved phrase",
+                            "rationale": "why this is better",
+                            "category": "clarity|inclusivity"
+                        }}
+                    ],
+                    "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5 - ENSURE these keywords are completely absent from the original job description"],
+                    "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers with ** formatting and bullet point format as specified. Keep section headers with ** but write ALL CONTENT INCLUDING KEYWORDS in plain text without any markdown formatting. Example: write 'Patient Care' not '**Patient Care**'.]",
+                    
+                    
                 }}
-            ],
-            "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-            "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers and bullet point format as specified.]",
-            
-            
-        }}
-        
-        **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
-        Return ONLY a valid JSON response (no additional text):
-        {{
-            "suggestions": [],
-            "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
-            "seo_keywords": []
-        }}
-        """
+                
+                **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
+                Return ONLY a valid JSON response (no additional text):
+                {{
+                    "suggestions": [],
+                    "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
+                    "seo_keywords": []
+                }}
+            """
        
         
         try:
