@@ -25,6 +25,8 @@ class LLMService:
     async def detect_bias(self, text: str) -> Dict:
         """Use Gemini to detect bias in job description"""
        
+       
+
         bias_detection_prompt = f"""
         At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
         Analyze the following text for job description bias. Follow this structured approach:
@@ -58,6 +60,14 @@ class LLMService:
         - BIASED: "prestigious university only", "own car" for remote work
         - LEGITIMATE: "bachelor's degree", "valid license" for driver
 
+        6. **Clarity Issues**: Unclear or ambiguous content that confuses candidates
+        - UNCLEAR: "handle various tasks", "other duties as assigned", undefined jargon, vague requirements
+        - CLEAR: Specific responsibilities, defined terms, concrete expectations
+
+        7. **Inclusivity Issues**: Language or requirements that unnecessarily exclude candidates
+        - EXCLUSIVE: "must work 24/7", "no accommodations", "rockstar team player", excessive requirements
+        - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
+
         **STEP 4: SCORING**
 
         **Bias Score (0.0 to 1.0):**
@@ -71,13 +81,18 @@ class LLMService:
         - Gendered terms (biased): -0.15
         - Unnecessary requirements: -0.2
         - Exclusive language: -0.1
+        - Economic barriers (unpaid roles, expensive requirements): -0.15
+        - Accessibility barriers (physical assumptions): -0.2
+        - Work-life balance issues (excessive hours, inflexibility): -0.1
 
         **Clarity Score (0.0 to 1.0):**
         - Start at 1.0, subtract for unclear elements:
-        - Complex sentences: -0.1 each
-        - Unclear requirements: -0.15 each
-        - Excessive jargon: -0.1 each
-        - Poor organization: -0.2
+        - Vague responsibilities ("various tasks", "other duties"): -0.15 each
+        - Undefined terms/jargon without context: -0.15 each
+        - Ambiguous requirements ("strong skills" without specifics): -0.1 each
+        - Complex sentences (>30 words, run-on): -0.1 each
+        - Poor organization/contradictory info: -0.2 each
+        - Missing essential details (work arrangement, reporting): -0.1 each
 
         **DO NOT PENALIZE:**
         - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
@@ -98,7 +113,7 @@ class LLMService:
                 "industry": "industry name", 
                 "issues": [
                     {{
-                        "type": "gender|age|racial|cultural|disability|socioeconomic",
+                        "type": "gender|age|racial|cultural|disability|socioeconomic|clarity|inclusivity",
                         "text": "biased phrase",
                         "start_index": 0,
                         "end_index": 10,
