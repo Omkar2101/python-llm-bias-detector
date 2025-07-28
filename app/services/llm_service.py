@@ -119,7 +119,7 @@ class LLMService:
                         "end_index": 10,
                         "severity": "low|medium|high",
                         "explanation": "why this is biased and not job-relevant",
-                        "job_relevance": "why this requirement is unnecessary for role performance"
+                        
                     }}
                 ],
                 "bias_score": 0.0,
