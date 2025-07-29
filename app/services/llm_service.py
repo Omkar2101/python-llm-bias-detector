@@ -25,107 +25,219 @@ class LLMService:
     async def detect_bias(self, text: str) -> Dict:
         """Use Gemini to detect bias in job description"""
        
-        bias_detection_prompt = f"""
-        At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
-        Analyze the following text for job description bias. Follow this structured approach:
+       
 
-        **STEP 1: VALIDATION**
-        Determine if the text is a job description. If not, return N/A response format.
+        # bias_detection_prompt = f"""
+        # At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
+        # Analyze the following text for job description bias. Follow this structured approach:
 
-        **STEP 2: CONTEXT ANALYSIS** 
-        Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
+        # **STEP 1: VALIDATION**
+        # Determine if the text is a job description. If not, return N/A response format.
 
-        **STEP 3: BIAS DETECTION**
-        Scan for these bias types, considering job relevance:
+        # **STEP 2: CONTEXT ANALYSIS** 
+        # Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
 
-        1. **Gender Bias**: Gendered language not required for job function
-        - BIASED: "salesman", "aggressive personality", "dominant leader" 
-        - LEGITIMATE: "confident patient care", "strong clinical skills"
+        # **STEP 3: BIAS DETECTION**
+        # Scan for these bias types, considering job relevance:
 
-        2. **Age Bias**: Age requirements without job justification
-        - BIASED: "young and energetic", "digital native", "recent graduate only"
-        - LEGITIMATE: "5+ years experience", "senior-level position"
+        # 1. **Gender Bias**: Gendered language not required for job function
+        # - BIASED: "salesman", "aggressive personality", "dominant leader" 
+        # - LEGITIMATE: "confident patient care", "strong clinical skills"
 
-        3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
-        - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
-        - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
+        # 2. **Age Bias**: Age requirements without job justification
+        # - BIASED: "young and energetic", "digital native", "recent graduate only"
+        # - LEGITIMATE: "5+ years experience", "senior-level position"
 
-        4. **Disability Bias**: Physical requirements unnecessary for job
-        - BIASED: "perfect vision" for desk job, "must stand" for remote work
-        - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
+        # 3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
+        # - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
+        # - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
 
-        5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
-        - BIASED: "prestigious university only", "own car" for remote work
-        - LEGITIMATE: "bachelor's degree", "valid license" for driver
+        # 4. **Disability Bias**: Physical requirements unnecessary for job
+        # - BIASED: "perfect vision" for desk job, "must stand" for remote work
+        # - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
 
-        **STEP 4: SCORING**
+        # 5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
+        # - BIASED: "prestigious university only", "own car" for remote work
+        # - LEGITIMATE: "bachelor's degree", "valid license" for driver
 
-        **Bias Score (0.0 to 1.0):**
-        - Start at 0.0, add points for each biased issue:
-        - Low severity: +0.1 | Medium: +0.2 | High: +0.3
-        - Cap at 1.0
+        # 6. **Clarity Issues**: Unclear or ambiguous content that confuses candidates
+        # - UNCLEAR: "handle various tasks", "other duties as assigned", undefined jargon, vague requirements
+        # - CLEAR: Specific responsibilities, defined terms, concrete expectations
 
-        **Inclusivity Score (0.0 to 1.0):**
-        - Start at 1.0, subtract for exclusionary elements:
-        - Explicit discrimination: -0.8
-        - Gendered terms (biased): -0.15
-        - Unnecessary requirements: -0.2
-        - Exclusive language: -0.1
+        # 7. **Inclusivity Issues**: Language or requirements that unnecessarily exclude candidates
+        # - EXCLUSIVE: "must work 24/7", "no accommodations", "rockstar team player", excessive requirements
+        # - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
 
-        **Clarity Score (0.0 to 1.0):**
-        - Start at 1.0, subtract for unclear elements:
-        - Complex sentences: -0.1 each
-        - Unclear requirements: -0.15 each
-        - Excessive jargon: -0.1 each
-        - Poor organization: -0.2
+        # **STEP 4: SCORING**
 
-        **DO NOT PENALIZE:**
-        - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
-        - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
-        - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+        # **Bias Score (0.0 to 1.0):**
+        # - Start at 0.0, add points for each biased issue:
+        # - Low severity: +0.1 | Medium: +0.2 | High: +0.3
+        # - Cap at 1.0
 
-        **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
+        # **Inclusivity Score (0.0 to 1.0):**
+        # - Start at 1.0, subtract for exclusionary elements:
+        # - Explicit discrimination: -0.8
+        # - Gendered terms (biased): -0.15
+        # - Unnecessary requirements: -0.2
+        # - Exclusive language: -0.1
+        # - Economic barriers (unpaid roles, expensive requirements): -0.15
+        # - Accessibility barriers (physical assumptions): -0.2
+        # - Work-life balance issues (excessive hours, inflexibility): -0.1
 
-        Job Description:
-        {text}
+        # **Clarity Score (0.0 to 1.0):**
+        # - Start at 1.0, subtract for unclear elements:
+        # - Vague responsibilities ("various tasks", "other duties"): -0.15 each
+        # - Undefined terms/jargon without context: -0.15 each
+        # - Ambiguous requirements ("strong skills" without specifics): -0.1 each
+        # - Complex sentences (>30 words, run-on): -0.1 each
+        # - Poor organization/contradictory info: -0.2 each
+        # - Missing essential details (work arrangement, reporting): -0.1 each
+
+        # **DO NOT PENALIZE:**
+        # - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
+        # - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
+        # - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+
+        # **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
+
+        # Job Description:
+        # {text}
         
 
-            **For job related text, return a structured JSON response:**
-            Return ONLY valid JSON:
+        #     **For job related text, return a structured JSON response:**
+        #     Return ONLY valid JSON:
 
-            {{
-                "role": "job title",
-                "industry": "industry name", 
-                "issues": [
+        #     {{
+        #         "role": "job title",
+        #         "industry": "industry name", 
+        #         "issues": [
+        #             {{
+        #                 "type": "gender|age|racial|cultural|disability|socioeconomic|clarity|inclusivity",
+        #                 "text": "biased phrase",
+        #                 "start_index": 0,
+        #                 "end_index": 10,
+        #                 "severity": "low|medium|high",
+        #                 "explanation": "why this is biased and not job-relevant",
+                        
+        #             }}
+        #         ],
+        #         "bias_score": 0.0,
+        #         "inclusivity_score": 1.0,
+        #         "clarity_score": 1.0,
+        #         "overall_assessment": "summary of findings considering job context"
+        #     }}
+
+        #     **For non-job related text, return this JSON:**
+        #     {{
+        #         "role": "N/A",
+        #         "industry": "N/A",
+        #         "issues": [],
+        #         "bias_score": "N/A",
+        #         "inclusivity_score": "N/A", 
+        #         "clarity_score": "N/A",
+        #         "overall_assessment": "The provided text does not appear to be a job description."
+        # }}
+
+
+        # """
+
+       
+        bias_detection_prompt = f"""
+                At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
+                Analyze the following text for job description bias. Follow this structured approach:
+
+                **STEP 1: VALIDATION**
+                Determine if the text is a job description. If not, return N/A response format.
+
+                **STEP 2: CONTEXT ANALYSIS** 
+                Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
+
+                **STEP 3: BIAS DETECTION**
+                Scan for these bias types, considering job relevance:
+
+                1. **Gender Bias**: Gendered language not required for job function
+                - BIASED: "salesman", "aggressive personality", "dominant leader" 
+                - LEGITIMATE: "confident patient care", "strong clinical skills"
+
+                2. **Age Bias**: Age requirements without job justification
+                - BIASED: "young and energetic", "digital native", "recent graduate only"
+                - LEGITIMATE: "5+ years experience", "senior-level position"
+
+                3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
+                - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
+                - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
+
+                4. **Disability Bias**: Physical requirements unnecessary for job
+                - BIASED: "perfect vision" for desk job, "must stand" for remote work
+                - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
+
+                5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
+                - BIASED: "prestigious university only", "own car" for remote work
+                - LEGITIMATE: "bachelor's degree", "valid license" for driver
+
+                6. **Clarity Issues**: Unclear or ambiguous content that confuses candidates
+                - UNCLEAR: "handle various tasks", "other duties as assigned", undefined jargon, vague requirements
+                - CLEAR: Specific responsibilities, defined terms, concrete expectations
+
+                7. **Inclusivity Issues**: Language or requirements that unnecessarily exclude candidates
+                - EXCLUSIVE: "must work 24/7", "no accommodations", "rockstar team player", excessive requirements
+                - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
+
+                **STEP 4: SCORING**
+
+                **Bias Score:** Use the best known method to calculate this and by Python programming calculate the value.
+
+                **Inclusivity Score:** Use the best known method to calculate this and by Python programming calculate the value.
+
+                **Clarity Score:** Use the best known method to calculate this and by Python programming calculate the value.
+
+                **DO NOT PENALIZE:**
+                - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
+                - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
+                - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+
+                **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
+
+                Job Description:
+                {text}
+                
+
+                    **For job related text, return a structured JSON response:**
+                    Return ONLY valid JSON with calculated scores:
+
                     {{
-                        "type": "gender|age|racial|cultural|disability|socioeconomic",
-                        "text": "biased phrase",
-                        "start_index": 0,
-                        "end_index": 10,
-                        "severity": "low|medium|high",
-                        "explanation": "why this is biased and not job-relevant",
-                        "job_relevance": "why this requirement is unnecessary for role performance"
+                        "role": "job title",
+                        "industry": "industry name", 
+                        "issues": [
+                            {{
+                                "type": "gender|age|racial|cultural|disability|socioeconomic|clarity|inclusivity",
+                                "text": "biased phrase",
+                                "start_index": 0,
+                                "end_index": 10,
+                                "severity": "low|medium|high",
+                                "explanation": "why this is biased and not job-relevant"
+                                
+                            }}
+                        ],
+                        "bias_score": 0.0,
+                        "inclusivity_score": 1.0,
+                        "clarity_score": 1.0,
+                        "overall_assessment": "summary of findings considering job context"
                     }}
-                ],
-                "bias_score": 0.0,
-                "inclusivity_score": 1.0,
-                "clarity_score": 1.0,
-                "overall_assessment": "summary of findings considering job context"
-            }}
 
-            **For non-job related text, return this JSON:**
-            {{
-                "role": "N/A",
-                "industry": "N/A",
-                "issues": [],
-                "bias_score": "N/A",
-                "inclusivity_score": "N/A", 
-                "clarity_score": "N/A",
-                "overall_assessment": "The provided text does not appear to be a job description."
-        }}
-
-
+                    **For non-job related text, return this JSON:**
+                    {{
+                        "role": "N/A",
+                        "industry": "N/A",
+                        "issues": [],
+                        "bias_score": "N/A",
+                        "inclusivity_score": "N/A", 
+                        "clarity_score": "N/A",
+                        "overall_assessment": "The provided text does not appear to be a job description."
+                }}
         """
+
 
         
         try:
@@ -189,101 +301,202 @@ class LLMService:
     async def improve_language(self, text: str) -> Dict:
         """Use Gemini to suggest language improvements"""
         
-        improvement_prompt = f"""
-        **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
+        # improvement_prompt = f"""
+        # **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
         
-        Improve the following job description for:
-        1. Clarity and readability
-        2. Inclusive language
-        3. Brevity and conciseness
-        4. Professional tone
-        5. SEO optimization with relevant keywords (Suggest the keywords that are relevant to the job description and not present in the current text)
+        # Improve the following job description for:
+        # 1. Clarity and readability
+        # 2. Inclusive language
+        # 3. Brevity and conciseness
+        # 4. Professional tone
+        # 5. SEO optimization with relevant keywords (Suggest the keywords that are relevant to the job description and not present in the current text)
         
        
 
-        Original Job Description:
-        {text}
+        # Original Job Description:
+        # {text}
 
-        **Analysis Instructions:**
-        1. Identify job role and industry context first
-        2. Distinguish between legitimate professional requirements and actual bias
-        3. Only suggest improvements for genuinely problematic language
-        4. Maintain professional tone while improving inclusivity
-        5. DO NOT flag or penalize standard professional language unless clearly discriminatory
+        # **Analysis Instructions:**
+        # 1. Identify job role and industry context first
+        # 2. Distinguish between legitimate professional requirements and actual bias
+        # 3. Only suggest improvements for genuinely problematic language
+        # 4. Maintain professional tone while improving inclusivity
+        # 5. DO NOT flag or penalize standard professional language unless clearly discriminatory
+        # 6.Suggest the keywords that are relevant to the job description and not present in the  Original Job Description
+        # 7.Frame the sentences using the  seo_keywords that you have found in the previous step and use them in the improved text(remove the markdowns ** from the words before adding them and then add).
         
-        **IMPROVED TEXT FORMATTING REQUIREMENTS:**
-        The improved job description must follow this exact structure and format:
+        # **IMPROVED TEXT FORMATTING REQUIREMENTS:**
+        # The improved job description must follow this exact structure and format:
         
-        **JOB TITLE:** [Clear, specific job title]
+        # **JOB TITLE:** [Clear, specific job title]
         
-        **COMPANY:** [Company name if provided, otherwise "Company Name"]
+        # **COMPANY:** [Company name if provided, otherwise "Company Name"]
         
-        **INDUSTRY:** [Specific industry/sector]
+        # **INDUSTRY:** [Specific industry/sector]
         
-        **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
+        # **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
         
-        **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
+        # **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
         
-        **JOB SUMMARY:**
-        [6-7 sentences providing an engaging overview of the role and its impact]
+        # **JOB SUMMARY:**
+        # [6-7 sentences providing an engaging overview of the role and its impact]
         
-        **KEY RESPONSIBILITIES:**
-        • [Responsibility 1 - action-oriented, specific]
-        • [Responsibility 2 - action-oriented, specific]
-        • [Responsibility 3 - action-oriented, specific]
-        • [Additional responsibilities as needed]
+        # **KEY RESPONSIBILITIES:**
+        # • [Responsibility 1 - action-oriented, specific]
+        # • [Responsibility 2 - action-oriented, specific]
+        # • [Responsibility 3 - action-oriented, specific]
+        # • [Additional responsibilities as needed]
         
-        **REQUIRED QUALIFICATIONS:**
-        • [Essential qualification 1]
-        • [Essential qualification 2]
-        • [Essential qualification 3]
-        • [Additional essential qualifications]
+        # **REQUIRED QUALIFICATIONS:**
+        # • [Essential qualification 1]
+        # • [Essential qualification 2]
+        # • [Essential qualification 3]
+        # • [Additional essential qualifications]
         
-        **PREFERRED QUALIFICATIONS:**
-        • [Preferred qualification 1]
-        • [Preferred qualification 2]
-        • [Additional preferred qualifications]
+        # **PREFERRED QUALIFICATIONS:**
+        # • [Preferred qualification 1]
+        # • [Preferred qualification 2]
+        # • [Additional preferred qualifications]
         
-        **REQUIRED SKILLS:**
-        • [Technical skill 1]
-        • [Technical skill 2]
-        • [Soft skill 1]
-        • [Soft skill 2]
-        • [Additional skills]
+        # **REQUIRED SKILLS:**
+        # • [Technical skill 1]
+        # • [Technical skill 2]
+        # • [Soft skill 1]
+        # • [Soft skill 2]
+        # • [Additional skills]
         
-        **WHAT WE OFFER:**
-        • [Benefit 1]
-        • [Benefit 2]
-        • [Benefit 3]
-        • [Additional benefits]
+        # **WHAT WE OFFER:**
+        # • [Benefit 1]
+        # • [Benefit 2]
+        # • [Benefit 3]
+        # • [Additional benefits]
         
-        **APPLICATION PROCESS:**
-        [Brief, clear instructions on how to apply]
+        # **APPLICATION PROCESS:**
+        # [Brief, clear instructions on how to apply]
         
-        Return ONLY a valid JSON response (no additional text):
-        {{
-            "suggestions": [
+        # Return ONLY a valid JSON response (no additional text and extra markdowns):
+        # {{
+        #     "suggestions": [
+        #         {{
+        #             "original": "original phrase",
+        #             "improved": "improved phrase",
+        #             "rationale": "why this is better",
+        #             "category": "clarity|inclusivity"
+        #         }}
+        #     ],
+        #     "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+        #     "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers and bullet point format as specified.]",
+            
+            
+        # }}
+        
+        # **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
+        # Return ONLY a valid JSON response (no additional text):
+        # {{
+        #     "suggestions": [],
+        #     "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
+        #     "seo_keywords": []
+        # }}
+        # """
+        improvement_prompt = f"""
+                **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
+                
+                Improve the following job description for:
+                1. Clarity and readability
+                2. Inclusive language
+                3. Brevity and conciseness
+                4. Professional tone
+                5. SEO optimization with relevant keywords (Suggest ONLY keywords that are relevant to the job description and are STRICTLY NOT present anywhere in the original text - perform thorough analysis to ensure complete absence)
+                
+            
+
+                Original Job Description:
+                {text}
+
+                **Analysis Instructions:**
+                1. Identify job role and industry context first
+                2. Distinguish between legitimate professional requirements and actual bias
+                3. Only suggest improvements for genuinely problematic language
+                4. Maintain professional tone while improving inclusivity
+                5. DO NOT flag or penalize standard professional language unless clearly discriminatory
+                6.Suggest ONLY keywords that are relevant to the job description and are STRICTLY NOT present in the Original Job Description - analyze the original text thoroughly to ensure none of the suggested keywords appear anywhere in the original content
+                7.Frame the sentences using the seo_keywords that you have found in the previous step and use them in the improved text. CRITICAL: When incorporating these keywords into the text, write them as plain text without any ** or * formatting. For example, if the keyword is "Patient Care", write it as "Patient Care" NOT as "**Patient Care**". IMPORTANT: Only use keywords that are completely absent from the original job description.
+                8. DO NOT use any markdown formatting (**, *, etc.) within the content text - ONLY use ** for the section headers as specified in the format below. All keywords and content must be written in plain text without any bold or italic formatting.
+                
+                **IMPROVED TEXT FORMATTING REQUIREMENTS:**
+                The improved job description must follow this exact structure and format (keep the ** around section headers):
+                
+                **JOB TITLE:** [Clear, specific job title]
+                
+                **COMPANY:** [Company name if provided, otherwise "Company Name"]
+                
+                **INDUSTRY:** [Specific industry/sector]
+                
+                **LOCATION:** [Work location/type - Remote/On-site/Hybrid]
+                
+                **EMPLOYMENT TYPE:** [Full-time/Part-time/Contract/Internship]
+                
+                **JOB SUMMARY:**
+                [6-7 sentences providing an engaging overview of the role and its impact]
+                
+                **KEY RESPONSIBILITIES:**
+                • [Responsibility 1 - action-oriented, specific]
+                • [Responsibility 2 - action-oriented, specific]
+                • [Responsibility 3 - action-oriented, specific]
+                • [Additional responsibilities as needed]
+                
+                **REQUIRED QUALIFICATIONS:**
+                • [Essential qualification 1]
+                • [Essential qualification 2]
+                • [Essential qualification 3]
+                • [Additional essential qualifications]
+                
+                **PREFERRED QUALIFICATIONS:**
+                • [Preferred qualification 1]
+                • [Preferred qualification 2]
+                • [Additional preferred qualifications]
+                
+                **REQUIRED SKILLS:**
+                • [Technical skill 1]
+                • [Technical skill 2]
+                • [Soft skill 1]
+                • [Soft skill 2]
+                • [Additional skills]
+                
+                **WHAT WE OFFER:**
+                • [Benefit 1]
+                • [Benefit 2]
+                • [Benefit 3]
+                • [Additional benefits]
+                
+                **APPLICATION PROCESS:**
+                [Brief, clear instructions on how to apply]
+                
+                Return ONLY a valid JSON response (no additional text and extra markdowns):
                 {{
-                    "original": "original phrase",
-                    "improved": "improved phrase",
-                    "rationale": "why this is better",
-                    "category": "clarity|inclusivity"
+                    "suggestions": [
+                        {{
+                            "original": "original phrase",
+                            "improved": "improved phrase",
+                            "rationale": "why this is better",
+                            "category": "clarity|inclusivity"
+                        }}
+                    ],
+                    "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5 - ENSURE these keywords are completely absent from the original job description"],
+                    "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers with ** formatting and bullet point format as specified. Keep section headers with ** but write ALL CONTENT INCLUDING KEYWORDS in plain text without any markdown formatting. Example: write 'Patient Care' not '**Patient Care**'.]",
+                    
+                    
                 }}
-            ],
-            "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-            "improved_text": "[Complete rewritten job description using the SEO keywords identified above also following the EXACT structure outlined above. Maintain all original context while improving clarity, inclusivity, and SEO optimization. Use the specific headers and bullet point format as specified.]",
-            
-            
-        }}
-        
-        **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
-        Return ONLY a valid JSON response (no additional text):
-        {{
-            "suggestions": [],
-            "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
-            "seo_keywords": []
-        }}
-        """
+                
+                **If the provided text is not related to a job description and does not fulfill the requirements of job descriptions then do the following**
+                Return ONLY a valid JSON response (no additional text):
+                {{
+                    "suggestions": [],
+                    "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
+                    "seo_keywords": []
+                }}
+            """
+       
         
         try:
             response = self.model.generate_content(

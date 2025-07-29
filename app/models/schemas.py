@@ -12,6 +12,8 @@ class BiasType(str, Enum):
     SOCIOECONOMIC = "socioeconomic"
     PHYSICAL = "physical"
     LEGAL = "legal"  # Added based on LLM response
+    CLARITY = "clarity"        # Added - missing from original
+    INCLUSIVITY = "inclusivity"  # Added - missing from original
 
 class SeverityLevel(str, Enum):
     LOW = "low"
