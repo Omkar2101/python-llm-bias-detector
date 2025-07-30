@@ -27,120 +27,217 @@ class LLMService:
        
        
 
-        bias_detection_prompt = f"""
-        At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
-        Analyze the following text for job description bias. Follow this structured approach:
+        # bias_detection_prompt = f"""
+        # At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
+        # Analyze the following text for job description bias. Follow this structured approach:
 
-        **STEP 1: VALIDATION**
-        Determine if the text is a job description. If not, return N/A response format.
+        # **STEP 1: VALIDATION**
+        # Determine if the text is a job description. If not, return N/A response format.
 
-        **STEP 2: CONTEXT ANALYSIS** 
-        Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
+        # **STEP 2: CONTEXT ANALYSIS** 
+        # Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
 
-        **STEP 3: BIAS DETECTION**
-        Scan for these bias types, considering job relevance:
+        # **STEP 3: BIAS DETECTION**
+        # Scan for these bias types, considering job relevance:
 
-        1. **Gender Bias**: Gendered language not required for job function
-        - BIASED: "salesman", "aggressive personality", "dominant leader" 
-        - LEGITIMATE: "confident patient care", "strong clinical skills"
+        # 1. **Gender Bias**: Gendered language not required for job function
+        # - BIASED: "salesman", "aggressive personality", "dominant leader" 
+        # - LEGITIMATE: "confident patient care", "strong clinical skills"
 
-        2. **Age Bias**: Age requirements without job justification
-        - BIASED: "young and energetic", "digital native", "recent graduate only"
-        - LEGITIMATE: "5+ years experience", "senior-level position"
+        # 2. **Age Bias**: Age requirements without job justification
+        # - BIASED: "young and energetic", "digital native", "recent graduate only"
+        # - LEGITIMATE: "5+ years experience", "senior-level position"
 
-        3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
-        - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
-        - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
+        # 3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
+        # - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
+        # - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
 
-        4. **Disability Bias**: Physical requirements unnecessary for job
-        - BIASED: "perfect vision" for desk job, "must stand" for remote work
-        - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
+        # 4. **Disability Bias**: Physical requirements unnecessary for job
+        # - BIASED: "perfect vision" for desk job, "must stand" for remote work
+        # - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
 
-        5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
-        - BIASED: "prestigious university only", "own car" for remote work
-        - LEGITIMATE: "bachelor's degree", "valid license" for driver
+        # 5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
+        # - BIASED: "prestigious university only", "own car" for remote work
+        # - LEGITIMATE: "bachelor's degree", "valid license" for driver
 
-        6. **Clarity Issues**: Unclear or ambiguous content that confuses candidates
-        - UNCLEAR: "handle various tasks", "other duties as assigned", undefined jargon, vague requirements
-        - CLEAR: Specific responsibilities, defined terms, concrete expectations
+        # 6. **Clarity Issues**: Unclear or ambiguous content that confuses candidates
+        # - UNCLEAR: "handle various tasks", "other duties as assigned", undefined jargon, vague requirements
+        # - CLEAR: Specific responsibilities, defined terms, concrete expectations
 
-        7. **Inclusivity Issues**: Language or requirements that unnecessarily exclude candidates
-        - EXCLUSIVE: "must work 24/7", "no accommodations", "rockstar team player", excessive requirements
-        - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
+        # 7. **Inclusivity Issues**: Language or requirements that unnecessarily exclude candidates
+        # - EXCLUSIVE: "must work 24/7", "no accommodations", "rockstar team player", excessive requirements
+        # - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
 
-        **STEP 4: SCORING**
+        # **STEP 4: SCORING**
 
-        **Bias Score (0.0 to 1.0):**
-        - Start at 0.0, add points for each biased issue:
-        - Low severity: +0.1 | Medium: +0.2 | High: +0.3
-        - Cap at 1.0
+        # **Bias Score (0.0 to 1.0):**
+        # - Start at 0.0, add points for each biased issue:
+        # - Low severity: +0.1 | Medium: +0.2 | High: +0.3
+        # - Cap at 1.0
 
-        **Inclusivity Score (0.0 to 1.0):**
-        - Start at 1.0, subtract for exclusionary elements:
-        - Explicit discrimination: -0.8
-        - Gendered terms (biased): -0.15
-        - Unnecessary requirements: -0.2
-        - Exclusive language: -0.1
-        - Economic barriers (unpaid roles, expensive requirements): -0.15
-        - Accessibility barriers (physical assumptions): -0.2
-        - Work-life balance issues (excessive hours, inflexibility): -0.1
+        # **Inclusivity Score (0.0 to 1.0):**
+        # - Start at 1.0, subtract for exclusionary elements:
+        # - Explicit discrimination: -0.8
+        # - Gendered terms (biased): -0.15
+        # - Unnecessary requirements: -0.2
+        # - Exclusive language: -0.1
+        # - Economic barriers (unpaid roles, expensive requirements): -0.15
+        # - Accessibility barriers (physical assumptions): -0.2
+        # - Work-life balance issues (excessive hours, inflexibility): -0.1
 
-        **Clarity Score (0.0 to 1.0):**
-        - Start at 1.0, subtract for unclear elements:
-        - Vague responsibilities ("various tasks", "other duties"): -0.15 each
-        - Undefined terms/jargon without context: -0.15 each
-        - Ambiguous requirements ("strong skills" without specifics): -0.1 each
-        - Complex sentences (>30 words, run-on): -0.1 each
-        - Poor organization/contradictory info: -0.2 each
-        - Missing essential details (work arrangement, reporting): -0.1 each
+        # **Clarity Score (0.0 to 1.0):**
+        # - Start at 1.0, subtract for unclear elements:
+        # - Vague responsibilities ("various tasks", "other duties"): -0.15 each
+        # - Undefined terms/jargon without context: -0.15 each
+        # - Ambiguous requirements ("strong skills" without specifics): -0.1 each
+        # - Complex sentences (>30 words, run-on): -0.1 each
+        # - Poor organization/contradictory info: -0.2 each
+        # - Missing essential details (work arrangement, reporting): -0.1 each
 
-        **DO NOT PENALIZE:**
-        - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
-        - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
-        - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+        # **DO NOT PENALIZE:**
+        # - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
+        # - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
+        # - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
 
-        **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
+        # **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
 
-        Job Description:
-        {text}
+        # Job Description:
+        # {text}
         
 
-            **For job related text, return a structured JSON response:**
-            Return ONLY valid JSON:
+        #     **For job related text, return a structured JSON response:**
+        #     Return ONLY valid JSON:
 
-            {{
-                "role": "job title",
-                "industry": "industry name", 
-                "issues": [
+        #     {{
+        #         "role": "job title",
+        #         "industry": "industry name", 
+        #         "issues": [
+        #             {{
+        #                 "type": "gender|age|racial|cultural|disability|socioeconomic|clarity|inclusivity",
+        #                 "text": "biased phrase",
+        #                 "start_index": 0,
+        #                 "end_index": 10,
+        #                 "severity": "low|medium|high",
+        #                 "explanation": "why this is biased and not job-relevant",
+                        
+        #             }}
+        #         ],
+        #         "bias_score": 0.0,
+        #         "inclusivity_score": 1.0,
+        #         "clarity_score": 1.0,
+        #         "overall_assessment": "summary of findings considering job context"
+        #     }}
+
+        #     **For non-job related text, return this JSON:**
+        #     {{
+        #         "role": "N/A",
+        #         "industry": "N/A",
+        #         "issues": [],
+        #         "bias_score": "N/A",
+        #         "inclusivity_score": "N/A", 
+        #         "clarity_score": "N/A",
+        #         "overall_assessment": "The provided text does not appear to be a job description."
+        # }}
+
+
+        # """
+
+       
+        bias_detection_prompt = f"""
+                At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following
+                Analyze the following text for job description bias. Follow this structured approach:
+
+                **STEP 1: VALIDATION**
+                Determine if the text is a job description. If not, return N/A response format.
+
+                **STEP 2: CONTEXT ANALYSIS** 
+                Identify the job role, industry, and core functions to distinguish legitimate requirements from bias.
+
+                **STEP 3: BIAS DETECTION**
+                Scan for these bias types, considering job relevance:
+
+                1. **Gender Bias**: Gendered language not required for job function
+                - BIASED: "salesman", "aggressive personality", "dominant leader" 
+                - LEGITIMATE: "confident patient care", "strong clinical skills"
+
+                2. **Age Bias**: Age requirements without job justification
+                - BIASED: "young and energetic", "digital native", "recent graduate only"
+                - LEGITIMATE: "5+ years experience", "senior-level position"
+
+                3. **Cultural/Racial Bias**: Cultural assumptions not job-relevant
+                - BIASED: "native speaker" (when fluency suffices), "cultural fit" without specifics
+                - LEGITIMATE: "Hindi fluency for Hindi teacher", "bilingual for international role"
+
+                4. **Disability Bias**: Physical requirements unnecessary for job
+                - BIASED: "perfect vision" for desk job, "must stand" for remote work
+                - LEGITIMATE: "lifting 50lbs" for warehouse, "clear vision" for driver
+
+                5. **Socioeconomic Bias**: Class-based assumptions not job-relevant
+                - BIASED: "prestigious university only", "own car" for remote work
+                - LEGITIMATE: "bachelor's degree", "valid license" for driver
+
+                6. **Clarity Issues**: Unclear or ambiguous content that confuses candidates
+                - UNCLEAR: "handle various tasks", "other duties as assigned", undefined jargon, vague requirements
+                - CLEAR: Specific responsibilities, defined terms, concrete expectations
+
+                7. **Inclusivity Issues**: Language or requirements that unnecessarily exclude candidates
+                - EXCLUSIVE: "must work 24/7", "no accommodations", "rockstar team player", excessive requirements
+                - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
+
+                **STEP 4: SCORING**
+
+                **Bias Score:** Use the best known method to calculate this and by Python programming calculate the value.
+
+                **Inclusivity Score:** Use the best known method to calculate this and by Python programming calculate the value.
+
+                **Clarity Score:** Use the best known method to calculate this and by Python programming calculate the value.
+
+                **DO NOT PENALIZE:**
+                - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
+                - Industry-appropriate requirements: medical roles needing clinical confidence, security needing fitness
+                - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+
+                **CRITICAL RULE:** Only flag requirements that exclude candidates WITHOUT job-related justification.
+
+                Job Description:
+                {text}
+                
+
+                    **For job related text, return a structured JSON response:**
+                    Return ONLY valid JSON with calculated scores:
+
                     {{
-                        "type": "gender|age|racial|cultural|disability|socioeconomic|clarity|inclusivity",
-                        "text": "biased phrase",
-                        "start_index": 0,
-                        "end_index": 10,
-                        "severity": "low|medium|high",
-                        "explanation": "why this is biased and not job-relevant",
-                        "job_relevance": "why this requirement is unnecessary for role performance"
+                        "role": "job title",
+                        "industry": "industry name", 
+                        "issues": [
+                            {{
+                                "type": "gender|age|racial|cultural|disability|socioeconomic|clarity|inclusivity",
+                                "text": "biased phrase",
+                                "start_index": 0,
+                                "end_index": 10,
+                                "severity": "low|medium|high",
+                                "explanation": "why this is biased and not job-relevant"
+                                
+                            }}
+                        ],
+                        "bias_score": 0.0,
+                        "inclusivity_score": 1.0,
+                        "clarity_score": 1.0,
+                        "overall_assessment": "summary of findings considering job context"
                     }}
-                ],
-                "bias_score": 0.0,
-                "inclusivity_score": 1.0,
-                "clarity_score": 1.0,
-                "overall_assessment": "summary of findings considering job context"
-            }}
 
-            **For non-job related text, return this JSON:**
-            {{
-                "role": "N/A",
-                "industry": "N/A",
-                "issues": [],
-                "bias_score": "N/A",
-                "inclusivity_score": "N/A", 
-                "clarity_score": "N/A",
-                "overall_assessment": "The provided text does not appear to be a job description."
-        }}
-
-
+                    **For non-job related text, return this JSON:**
+                    {{
+                        "role": "N/A",
+                        "industry": "N/A",
+                        "issues": [],
+                        "bias_score": "N/A",
+                        "inclusivity_score": "N/A", 
+                        "clarity_score": "N/A",
+                        "overall_assessment": "The provided text does not appear to be a job description."
+                }}
         """
+
 
         
         try:
