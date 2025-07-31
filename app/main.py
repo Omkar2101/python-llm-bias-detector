@@ -16,10 +16,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Get CORS origins from environment variable with fallback
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5268").split(",")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5268"],  # React and .NET URLs
+    allow_origins=ALLOWED_ORIGINS,  # React and .NET URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -180,4 +183,16 @@ async def analyze_uploaded_file(file: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+     # Get configuration from environment variables
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    log_level = os.getenv("LOG_LEVEL", "info")
+
+    uvicorn.run(
+        app, 
+        host=host, 
+        port=port, 
+        log_level=log_level
+    )
+    # uvicorn.run(app, host="0.0.0.0", port=8000)
