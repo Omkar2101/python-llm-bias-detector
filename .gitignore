@@ -41,8 +41,8 @@ ENV/
 
 #tests
 tests/__pycache__/
-tests/evaluation/
-tests/test_data/
+# tests/evaluation/
+# tests/test_data/
 # IDE
 .idea/
 .vscode/

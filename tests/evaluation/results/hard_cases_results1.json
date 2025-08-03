@@ -1,0 +1,481 @@
+{
+  "timestamp": "2025-07-30T12:58:57.923719",
+  "overall_stats": {
+    "total_cases": 7,
+    "successful_evaluations": 7,
+    "passed_cases": 6,
+    "pass_rate": 0.8571428571428571,
+    "avg_bias_score_diff": 0.08571428571428573,
+    "avg_inclusivity_score_diff": 0.07857142857142858,
+    "avg_clarity_score_diff": 0.15000000000000005
+  },
+  "difficulty_stats": {
+    "hard": {
+      "total": 7,
+      "passed": 6,
+      "pass_rate": 0.8571428571428571
+    }
+  },
+  "individual_results": [
+    {
+      "test_case_id": "HC001",
+      "test_case_name": "Subtle But Clear Discrimination",
+      "difficulty_level": "hard",
+      "description": "Multiple subtle discriminations that require sophisticated detection",
+      "expected_scores": {
+        "bias_score": 0.8,
+        "inclusivity_score": 0.2,
+        "clarity_score": 0.7,
+        "issues_count": 6
+      },
+      "actual_scores": {
+        "bias_score": 1.0,
+        "inclusivity_score": 0.0,
+        "clarity_score": 0.9,
+        "issues_count": 11
+      },
+      "score_differences": {
+        "bias_diff": 0.19999999999999996,
+        "inclusivity_diff": 0.2,
+        "clarity_diff": 0.20000000000000007
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": false,
+        "expected_types_found": false
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "attractive female assistant",
+          "severity": "high",
+          "explanation": "Specifying gender and attractiveness is discriminatory and not related to the job's core functions.",
+          "start_index": 26,
+          "end_index": 50
+        },
+        {
+          "type": "socioeconomic",
+          "text": "prestigious firm",
+          "severity": "low",
+          "explanation": "While not explicitly discriminatory, emphasizing prestige can create a barrier for candidates from less privileged backgrounds.",
+          "start_index": 59,
+          "end_index": 75
+        },
+        {
+          "type": "age",
+          "text": "young, energetic",
+          "severity": "medium",
+          "explanation": "The terms 'young' and 'energetic' imply an age preference, which is discriminatory. Energy can be demonstrated by candidates of any age.",
+          "start_index": 91,
+          "end_index": 107
+        },
+        {
+          "type": "socioeconomic",
+          "text": "good family background",
+          "severity": "high",
+          "explanation": "This requirement is discriminatory and irrelevant to job performance. It implies a preference for candidates from privileged socioeconomic backgrounds.",
+          "start_index": 113,
+          "end_index": 134
+        },
+        {
+          "type": "cultural",
+          "text": "native English speaker",
+          "severity": "low",
+          "explanation": "While strong English skills are likely necessary, specifying 'native speaker' can exclude qualified candidates who are fluent but not native speakers.",
+          "start_index": 142,
+          "end_index": 164
+        },
+        {
+          "type": "cultural",
+          "text": "traditional values",
+          "severity": "high",
+          "explanation": "This is vague and potentially discriminatory, as 'traditional values' can be interpreted in various ways and may not align with all candidates' beliefs.",
+          "start_index": 170,
+          "end_index": 188
+        },
+        {
+          "type": "gender",
+          "text": "Female preferred for client interaction",
+          "severity": "high",
+          "explanation": "Explicit gender preference is illegal and discriminatory.",
+          "start_index": 211,
+          "end_index": 247
+        },
+        {
+          "type": "age",
+          "text": "Age 22-28 years",
+          "severity": "high",
+          "explanation": "Specifying an age range is age discrimination.",
+          "start_index": 252,
+          "end_index": 268
+        },
+        {
+          "type": "socioeconomic",
+          "text": "Ivy League education preferred",
+          "severity": "medium",
+          "explanation": "Preferring Ivy League education favors candidates from privileged backgrounds and excludes qualified candidates from other institutions.",
+          "start_index": 273,
+          "end_index": 301
+        },
+        {
+          "type": "disability",
+          "text": "No visible tattoos or unconventional appearance",
+          "severity": "medium",
+          "explanation": "This is discriminatory and infringes on personal expression. Tattoos and unconventional appearances do not affect job performance.",
+          "start_index": 306,
+          "end_index": 350
+        },
+        {
+          "type": "cultural",
+          "text": "Strong family values and conservative mindset",
+          "severity": "high",
+          "explanation": "This is vague, potentially discriminatory, and irrelevant to job performance. It implies a preference for candidates with specific beliefs.",
+          "start_index": 377,
+          "end_index": 417
+        }
+      ],
+      "overall_assessment": "The job description exhibits significant bias across multiple categories (gender, age, socioeconomic status, cultural background, and disability). The requirements are highly exclusionary and not job-relevant, indicating a lack of inclusivity and potential legal issues.",
+      "passed": false
+    },
+    {
+      "test_case_id": "HC002",
+      "test_case_name": "Legitimate Job-Relevant Requirements",
+      "difficulty_level": "hard",
+      "description": "Physical requirements that are genuinely job-relevant and non-discriminatory",
+      "expected_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 0.95,
+        "clarity_score": 0.9,
+        "issues_count": 0
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 1.0,
+        "clarity_score": 1.0,
+        "issues_count": 0
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.050000000000000044,
+        "clarity_diff": 0.09999999999999998
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [],
+      "overall_assessment": "The job description is well-written and does not contain any apparent biases. The requirements listed are relevant to the role of a physical therapist in a sports medicine clinic.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC003",
+      "test_case_name": "Cultural Role With Ambiguous Requirements",
+      "difficulty_level": "hard",
+      "description": "Cultural requirements that could be job-relevant or potentially exclusionary",
+      "expected_scores": {
+        "bias_score": 0.3,
+        "inclusivity_score": 0.7,
+        "clarity_score": 0.8,
+        "issues_count": 2
+      },
+      "actual_scores": {
+        "bias_score": 0.4,
+        "inclusivity_score": 0.6,
+        "clarity_score": 0.7,
+        "issues_count": 4
+      },
+      "score_differences": {
+        "bias_diff": 0.10000000000000003,
+        "inclusivity_diff": 0.09999999999999998,
+        "clarity_diff": 0.10000000000000009
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [
+        {
+          "type": "cultural",
+          "text": "Native-level Japanese language proficiency",
+          "severity": "medium",
+          "explanation": "Requiring 'native-level' proficiency can be exclusionary and may not be necessary if the candidate possesses excellent fluency and cultural understanding. Fluency should be sufficient.",
+          "start_index": 70,
+          "end_index": 110
+        },
+        {
+          "type": "cultural",
+          "text": "authentic understanding",
+          "severity": "low",
+          "explanation": "The term 'authentic understanding' is vague and subjective. It's difficult to measure and could lead to bias based on cultural background or personal interpretation.",
+          "start_index": 114,
+          "end_index": 136
+        },
+        {
+          "type": "cultural",
+          "text": "naturally connect",
+          "severity": "low",
+          "explanation": "'Naturally connect' is subjective and difficult to quantify. It could lead to bias based on personality or perceived cultural fit.",
+          "start_index": 160,
+          "end_index": 177
+        },
+        {
+          "type": "cultural",
+          "text": "Cultural sensitivity and awareness",
+          "severity": "low",
+          "explanation": "While important, this phrase is broad and lacks specific criteria. It could be interpreted subjectively and lead to bias.",
+          "start_index": 351,
+          "end_index": 384
+        }
+      ],
+      "overall_assessment": "The job description contains some cultural biases due to the use of subjective and potentially exclusionary language. The requirement for 'native-level' proficiency and 'authentic understanding' could unintentionally exclude qualified candidates. The description could be improved by focusing on specific, measurable skills and experiences.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC004",
+      "test_case_name": "Model Inclusive Job Description",
+      "difficulty_level": "hard",
+      "description": "Highly inclusive job description with explicit diversity commitment",
+      "expected_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 1.0,
+        "clarity_score": 0.95,
+        "issues_count": 0
+      },
+      "actual_scores": {
+        "bias_score": 0.0,
+        "inclusivity_score": 1.0,
+        "clarity_score": 1.0,
+        "issues_count": 0
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.0,
+        "clarity_diff": 0.050000000000000044
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [],
+      "overall_assessment": "The job description is well-written and inclusive. It emphasizes diversity and inclusion, and the requirements are relevant to the job role. There are no indications of bias.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC005",
+      "test_case_name": "Fashion Industry Appearance Requirements",
+      "difficulty_level": "hard",
+      "description": "Industry-specific appearance requirements that may be legitimate but potentially discriminatory",
+      "expected_scores": {
+        "bias_score": 0.4,
+        "inclusivity_score": 0.6,
+        "clarity_score": 0.8,
+        "issues_count": 3
+      },
+      "actual_scores": {
+        "bias_score": 0.4,
+        "inclusivity_score": 0.6,
+        "clarity_score": 1.0,
+        "issues_count": 2
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.0,
+        "clarity_diff": 0.19999999999999996
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": false
+      },
+      "detected_issues": [
+        {
+          "type": "gender",
+          "text": "Height between 5'9\" and 6'0\"",
+          "severity": "medium",
+          "explanation": "This height requirement is more commonly associated with female models and may exclude qualified male models.",
+          "start_index": 204,
+          "end_index": 232
+        },
+        {
+          "type": "gender",
+          "text": "Clothing size 2-4",
+          "severity": "medium",
+          "explanation": "This clothing size requirement is typically associated with female models and excludes male models. It also promotes an unrealistic body image.",
+          "start_index": 238,
+          "end_index": 255
+        }
+      ],
+      "overall_assessment": "The job description contains gender bias due to specific height and clothing size requirements that disproportionately affect male models. The height and size requirements are not essential for the role and contribute to an exclusionary environment.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC006",
+      "test_case_name": "Religious and Legal Status Bias",
+      "difficulty_level": "hard",
+      "description": "Religious requirements and citizenship bias for non-religious role",
+      "expected_scores": {
+        "bias_score": 0.7,
+        "inclusivity_score": 0.3,
+        "clarity_score": 0.8,
+        "issues_count": 4
+      },
+      "actual_scores": {
+        "bias_score": 0.7,
+        "inclusivity_score": 0.1,
+        "clarity_score": 0.9,
+        "issues_count": 5
+      },
+      "score_differences": {
+        "bias_diff": 0.0,
+        "inclusivity_diff": 0.19999999999999998,
+        "clarity_diff": 0.09999999999999998
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": false
+      },
+      "detected_issues": [
+        {
+          "type": "cultural",
+          "text": "shares our Christian values",
+          "severity": "high",
+          "explanation": "This requirement explicitly favors candidates of a specific religion, which is discriminatory and not directly related to the administrative tasks of the job.",
+          "start_index": 61,
+          "end_index": 87
+        },
+        {
+          "type": "cultural",
+          "text": "faith-based organization",
+          "severity": "medium",
+          "explanation": "While stating the nature of the organization isn't inherently biased, it reinforces the preference for a specific religious background, potentially discouraging qualified candidates from other backgrounds.",
+          "start_index": 104,
+          "end_index": 128
+        },
+        {
+          "type": "cultural",
+          "text": "Christian faith and values alignment",
+          "severity": "high",
+          "explanation": "This requirement explicitly favors candidates of a specific religion, which is discriminatory and not directly related to the administrative tasks of the job.",
+          "start_index": 201,
+          "end_index": 236
+        },
+        {
+          "type": "cultural",
+          "text": "Strong moral character and family values",
+          "severity": "medium",
+          "explanation": "This is vague and subjective. 'Moral character' and 'family values' are open to interpretation and can be used to discriminate against candidates based on personal beliefs or lifestyle choices that are unrelated to job performance.",
+          "start_index": 264,
+          "end_index": 302
+        },
+        {
+          "type": "cultural",
+          "text": "traditional family values",
+          "severity": "medium",
+          "explanation": "This is vague and subjective. 'Traditional family values' are open to interpretation and can be used to discriminate against candidates based on personal beliefs or lifestyle choices that are unrelated to job performance.",
+          "start_index": 158,
+          "end_index": 183
+        }
+      ],
+      "overall_assessment": "The job description contains significant cultural bias due to its emphasis on Christian values and 'traditional family values'. These requirements are not job-relevant and could discourage qualified candidates from diverse backgrounds. The requirement for US citizenship, while potentially legitimate depending on funding sources or legal requirements, should be carefully reviewed for necessity.",
+      "passed": true
+    },
+    {
+      "test_case_id": "HC007",
+      "test_case_name": "Unnecessary Physical Ability Requirements",
+      "difficulty_level": "hard",
+      "description": "Unnecessary physical requirements for remote data analysis role",
+      "expected_scores": {
+        "bias_score": 0.6,
+        "inclusivity_score": 0.4,
+        "clarity_score": 0.7,
+        "issues_count": 4
+      },
+      "actual_scores": {
+        "bias_score": 0.9,
+        "inclusivity_score": 0.4,
+        "clarity_score": 1.0,
+        "issues_count": 6
+      },
+      "score_differences": {
+        "bias_diff": 0.30000000000000004,
+        "inclusivity_diff": 0.0,
+        "clarity_diff": 0.30000000000000004
+      },
+      "accuracy_flags": {
+        "bias_score_accurate": true,
+        "inclusivity_score_accurate": true,
+        "clarity_score_accurate": true,
+        "issues_count_accurate": true,
+        "expected_types_found": true
+      },
+      "detected_issues": [
+        {
+          "type": "disability",
+          "text": "perfect vision",
+          "severity": "high",
+          "explanation": "Requiring perfect vision is discriminatory unless essential for the job. Data analysis primarily involves working with computers and data, not tasks requiring exceptional eyesight.",
+          "start_index": 94,
+          "end_index": 108
+        },
+        {
+          "type": "disability",
+          "text": "excellent hearing",
+          "severity": "high",
+          "explanation": "Requiring excellent hearing is discriminatory unless essential for the job. Data analysis primarily involves working with computers and data, not tasks requiring exceptional hearing.",
+          "start_index": 114,
+          "end_index": 130
+        },
+        {
+          "type": "disability",
+          "text": "ability to stand and walk",
+          "severity": "medium",
+          "explanation": "Requiring the ability to stand and walk throughout the workday is discriminatory unless essential for the job. A remote data analyst position does not inherently require prolonged standing or walking.",
+          "start_index": 176,
+          "end_index": 201
+        },
+        {
+          "type": "disability",
+          "text": "Perfect vision (20/20) and excellent hearing",
+          "severity": "high",
+          "explanation": "Requiring perfect vision and excellent hearing is discriminatory unless essential for the job. Data analysis primarily involves working with computers and data, not tasks requiring exceptional eyesight or hearing.",
+          "start_index": 235,
+          "end_index": 274
+        },
+        {
+          "type": "disability",
+          "text": "Ability to stand and walk throughout workday",
+          "severity": "medium",
+          "explanation": "Requiring the ability to stand and walk throughout the workday is discriminatory unless essential for the job. A remote data analyst position does not inherently require prolonged standing or walking.",
+          "start_index": 279,
+          "end_index": 320
+        },
+        {
+          "type": "disability",
+          "text": "Quick reflexes and manual dexterity",
+          "severity": "medium",
+          "explanation": "Requiring quick reflexes and manual dexterity is discriminatory unless essential for the job. Data analysis primarily involves working with computers and data, not tasks requiring exceptional physical abilities.",
+          "start_index": 325,
+          "end_index": 358
+        }
+      ],
+      "overall_assessment": "The job description contains several instances of disability bias. The requirements for perfect vision, excellent hearing, the ability to stand and walk throughout the workday, and quick reflexes and manual dexterity are not justified for a remote data analyst position and could exclude qualified candidates.",
+      "passed": true
+    }
+  ]
+}
