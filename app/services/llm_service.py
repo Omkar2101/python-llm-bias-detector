@@ -6,6 +6,7 @@ from app.models.schemas import BiasIssue, Suggestion, BiasType, SeverityLevel, C
 from fastapi import HTTPException
 import time
 from dotenv import load_dotenv
+from openai import OpenAI
 
 class LLMService:
     def __init__(self):
@@ -18,12 +19,19 @@ class LLMService:
         # if not api_key:
         #     raise ValueError("GOOGLE_GEMINI_API_KEY not found in environment variables")
 
-        # Configure Google Gemini
-        genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
-        self.model = genai.GenerativeModel('gemini-2.0-flash')
+        # # Configure Google Gemini
+        # genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
+        # self.model = genai.GenerativeModel('gemini-2.0-flash')
+
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+
+        self.client = OpenAI(api_key=api_key)
     
     async def detect_bias(self, text: str) -> Dict:
-        """Use Gemini to detect bias in job description"""
+       
+        """Use OpenAI GPT-5 to detect bias in job descriptions"""
        
        
 
@@ -266,18 +274,27 @@ class LLMService:
         
         
         try:
-            response = self.model.generate_content(
-                bias_detection_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.1,
-                    top_p=0.8,
-                    top_k=40,
-                    max_output_tokens=2048,
-                )
-            )
+            # response = self.model.generate_content(
+            #     bias_detection_prompt,
+            #     generation_config=genai.types.GenerationConfig(
+            #         temperature=0.1,
+            #         top_p=0.8,
+            #         top_k=40,
+            #         max_output_tokens=2048,
+            #     )
+            # )
             
-            # Clean the response text to extract JSON
-            response_text = response.text.strip()
+            # # Clean the response text to extract JSON
+            # response_text = response.text.strip()
+
+            response = self.client.chat.completions.create(
+                model="gpt-4.1",  # GPT-5 equivalent in API is currently `gpt-4.1` or `gpt-4o` 
+                messages=[{"role": "user", "content": bias_detection_prompt}],
+                temperature=0.1,
+                max_tokens=2000
+            )
+
+            response_text = response.choices[0].message["content"].strip()
             
             # Remove any markdown formatting if present
             if response_text.startswith('```json'):
@@ -434,22 +451,21 @@ class LLMService:
       
         
         try:
-            response = self.model.generate_content(
-                improvement_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.3,
-                    top_p=0.8,
-                    top_k=40,
-                    max_output_tokens=3000,
-                )
+            response = self.client.chat.completions.create(
+                model="gpt-4.1",  # GPT-5 equivalent in API is currently `gpt-4.1` or `gpt-4o` 
+                messages=[{"role": "user", "content": improvement_prompt}],
+                temperature=0.1,
+                max_tokens=3000
             )
+
+            response_text = response.choices[0].message["content"].strip()
             
 
             #  # Add detailed logging
             # print(f"Raw Gemini response: {response.text}")
 
-            # Clean the response text to extract JSON
-            response_text = response.text.strip()
+            # # Clean the response text to extract JSON
+            # response_text = response.text.strip()
             
             # print(f"Cleaned response text: {response_text}")
             
