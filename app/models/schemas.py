@@ -33,6 +33,11 @@ class CategoryType(str, Enum):
     INCLUSIVITY = "inclusivity"
     PROFESSIONALISM = "professionalism"  # Added - this was missing!
     LEGAL = "legal"  # Added based on LLM response
+    AGE = "age"  # Added based on LLM response
+    DISABILITY = "disability"  # Added based on LLM response
+    ELITISM = "elitism"  # Added based on LLM response
+    MENTAL_HEALTH = "mental_health"  # Added based on LLM response
+    
 
 class BiasIssue(BaseModel):
     type: BiasType

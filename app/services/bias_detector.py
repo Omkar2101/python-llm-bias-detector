@@ -108,9 +108,63 @@ class BiasDetector:
         print(f"Final result before return: {result}")  # Debug log
         return result
     
+    # def _parse_llm_issues(self, llm_issues: List[Dict]) -> List[BiasIssue]:
+    #     """Parse LLM bias issues into BiasIssue objects"""
+    #     issues = []
+    #     seen_phrases = set()  # Track unique phrases to prevent duplicates
+    #     for issue in llm_issues:
+    #         try:
+    #             # Validate required fields
+    #             if not issue.get('type') or not issue.get('text'):
+    #                 print(f"Skipping incomplete issue: {issue}")
+    #                 continue
+                
+    #             # Handle BiasType validation
+    #             bias_type_str = issue.get('type', 'gender').lower()
+
+    #             # Skip if we've already processed this exact phrase
+    #             if bias_type_str in seen_phrases:
+    #                 print(f"Skipping duplicate phrase: '{bias_type_str}'")
+    #                 continue
+
+    #             # Add to seen phrases set
+    #             seen_phrases.add(bias_type_str)
+
+
+    #             try:
+    #                 bias_type = BiasType(bias_type_str)
+    #             except ValueError:
+    #                 print(f"Unknown bias type '{bias_type_str}', defaulting to gender")
+    #                 bias_type = BiasType.GENDER
+                
+    #             # Handle SeverityLevel validation
+    #             severity_str = issue.get('severity', 'medium').lower()
+    #             try:
+    #                 severity = SeverityLevel(severity_str)
+    #             except ValueError:
+    #                 print(f"Unknown severity '{severity_str}', defaulting to medium")
+    #                 severity = SeverityLevel.MEDIUM
+                
+    #             bias_issue = BiasIssue(
+    #                 type=bias_type,
+    #                 text=issue.get('text', ''),
+    #                 start_index=issue.get('start_index', 0),
+    #                 end_index=issue.get('end_index', 0),
+    #                 severity=severity,
+    #                 explanation=issue.get('explanation', '')
+    #             )
+    #             issues.append(bias_issue)
+    #         except Exception as e:
+    #             print(f"Error parsing LLM issue: {e}")
+    #             print(f"Problematic issue: {issue}")
+    #             continue
+    #     return issues
+
     def _parse_llm_issues(self, llm_issues: List[Dict]) -> List[BiasIssue]:
-        """Parse LLM bias issues into BiasIssue objects"""
+        """Parse LLM bias issues into BiasIssue objects with duplicate prevention"""
         issues = []
+        seen_phrases = set()  # Track unique phrases to prevent duplicates
+        
         for issue in llm_issues:
             try:
                 # Validate required fields
@@ -118,13 +172,27 @@ class BiasDetector:
                     print(f"Skipping incomplete issue: {issue}")
                     continue
                 
-                # Handle BiasType validation
+                # Get the biased text and normalize it for comparison
+                biased_text = issue.get('text', '').strip().lower()
+                
+                # Skip if we've already processed this exact phrase
+                if biased_text in seen_phrases:
+                    print(f"Skipping duplicate phrase: '{biased_text}'")
+                    continue
+                
+                # Add to seen phrases set
+                seen_phrases.add(biased_text)
+                
+                # Handle BiasType validation with improved type classification
                 bias_type_str = issue.get('type', 'gender').lower()
+                
+                
+                
                 try:
                     bias_type = BiasType(bias_type_str)
                 except ValueError:
-                    print(f"Unknown bias type '{bias_type_str}', defaulting to gender")
-                    bias_type = BiasType.GENDER
+                    print(f"Unknown bias type '{bias_type_str}', defaulting to clarity")
+                    bias_type = BiasType.CLARITY  # Changed default to clarity
                 
                 # Handle SeverityLevel validation
                 severity_str = issue.get('severity', 'medium').lower()
@@ -143,10 +211,13 @@ class BiasDetector:
                     explanation=issue.get('explanation', '')
                 )
                 issues.append(bias_issue)
+                
             except Exception as e:
                 print(f"Error parsing LLM issue: {e}")
                 print(f"Problematic issue: {issue}")
                 continue
+        
+        # print(f"Processed {len(llm_issues)} LLM issues, returned {len(issues)} unique issues")
         return issues
     
     def _parse_llm_suggestions(self, llm_suggestions: List[Dict]) -> List[Suggestion]:
