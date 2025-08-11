@@ -518,9 +518,10 @@ class LLMService:
                 
                 **CRITICAL IMPROVEMENT RULES:**
                 - If it is mentioned that no education requirements are needed or no graduation is required then add this in the **OUR IDEAL CANDIDATE** section: "No formal education requirements are needed for this role"
+                - Mention the education requirements in the **OUR IDEAL CANDIDATE** section if it is mentioned in the original job description
                 - Add all the skills that are present in the original job description in the **REQUIRED SKILLS** section do not miss any skills that are present in the original job description
                 - If it is mentioned that no experience is needed then add this in the **OUR IDEAL CANDIDATE** section: "No prior experience is required for this role, but relevant skills and enthusiasm are essential."
-                - ONLY FLAG LANGUAGE THAT EXCLUDES QUALIFIED CANDIDATES WITHOUT JOB-RELATED JUSTIFICATION
+                - FLAG LANGUAGE THAT EXCLUDES QUALIFIED CANDIDATES WITHOUT JOB-RELATED JUSTIFICATION
                 - DO NOT FLAG LEGITIMATE PROFESSIONAL REQUIREMENTS (e.g., DDS/DMD for dentists, physical demands for construction roles)
                 - FOR CLARITY ISSUES: Focus on ambiguous eligibility language that obscures pathways for internationally trained professionals
                 
