@@ -8,12 +8,18 @@ class BiasType(str, Enum):
     RACIAL = "racial"
     CULTURAL = "cultural"
     DISABILITY = "disability"
-    RELIGIOUS = "religious"
+    RELIGION = "religion",
+    AGE_DISCLOSURE = "age_disclosure"  # Added based on LLM response
     SOCIOECONOMIC = "socioeconomic"
     PHYSICAL = "physical"
     LEGAL = "legal"  # Added based on LLM response
     CLARITY = "clarity"        # Added - missing from original
     INCLUSIVITY = "inclusivity"  # Added - missing from original
+    LGBTQ = "lgbtq"
+    FORMER_FELONS = "former_felons"
+    ELITISM = "elitism"
+    MENTAL_HEALTH = "mental_health"
+
 
 class SeverityLevel(str, Enum):
     LOW = "low"
@@ -27,6 +33,11 @@ class CategoryType(str, Enum):
     INCLUSIVITY = "inclusivity"
     PROFESSIONALISM = "professionalism"  # Added - this was missing!
     LEGAL = "legal"  # Added based on LLM response
+    AGE = "age"  # Added based on LLM response
+    DISABILITY = "disability"  # Added based on LLM response
+    ELITISM = "elitism"  # Added based on LLM response
+    MENTAL_HEALTH = "mental_health"  # Added based on LLM response
+    
 
 class BiasIssue(BaseModel):
     type: BiasType
