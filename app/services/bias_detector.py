@@ -47,6 +47,11 @@ class BiasDetector:
                 'improved_text': 'Error generating improved text'
             }
         
+       # Check for error and raise an exception to stop processing
+        if llm_improvement_result.get('improved_text') == 'Error generating improved text':
+            print("Improved text generation failed, aborting analysis")
+            raise Exception("Language improvement service failed - cannot complete analysis")
+        
         # Combine rule-based and LLM results
         all_issues = self._parse_llm_issues(llm_bias_result.get('issues', []))
         # rule_based_issues = self._detect_rule_based_bias(text)
