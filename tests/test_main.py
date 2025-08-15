@@ -2,7 +2,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch, AsyncMock
-from app.main import app
+from app.main import app, get_error_type
 import io
 import os
 import json
@@ -10,7 +10,9 @@ from app.models.schemas import TextExtractionResponse, BiasAnalysisResult, BiasI
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    """Create a test client for the FastAPI app"""
+    with TestClient(app) as test_client:
+        yield test_client
 
 @pytest.fixture
 def mock_text_extractor():
@@ -56,8 +58,11 @@ def test_extract_empty_file(client):
     }
     response = client.post("/extract", files=files)
     assert response.status_code == 400
-    assert "Empty file provided" in response.json()["message"]
-
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Empty file provided" in error_data["message"]
+    assert error_data["status_code"] == 400
+    assert error_data["type"] == "validation_error"
 
 def test_extract_large_file(client):
     """Test /extract endpoint with file larger than 10MB"""
@@ -68,8 +73,11 @@ def test_extract_large_file(client):
     }
     response = client.post("/extract", files=files)
     assert response.status_code == 413
-    assert "File too large" in response.json()["message"]
-
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "File too large" in error_data["message"]
+    assert error_data["status_code"] == 413
+    assert error_data["type"] == "file_too_large"
 
 def test_extract_no_filename(client):
     """Test /extract endpoint with no filename"""
@@ -77,10 +85,9 @@ def test_extract_no_filename(client):
         'file': ('', b'some content', 'text/plain')
     }
     response = client.post("/extract", files=files)
-    assert response.status_code == 422
-
-    
-
+    assert response.status_code == 422  # FastAPI validation status code
+    error_data = response.json()
+    assert "detail" in error_data  # FastAPI validation error format
 
 def test_extract_successful_extraction(client, mock_text_extractor):
     """Test successful text extraction"""
@@ -116,7 +123,11 @@ def test_extract_failed_extraction(client, mock_text_extractor):
     response = client.post("/extract", files=files)
     
     assert response.status_code == 400
-    assert "Unsupported file type: xyz" in response.json()["message"]
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Unsupported file type: xyz" in error_data["message"]
+    assert error_data["status_code"] == 400
+    assert error_data["type"] == "validation_error"
 
 def test_extract_exception_handling(client, mock_text_extractor):
     """Test exception handling in extract endpoint"""
@@ -129,30 +140,50 @@ def test_extract_exception_handling(client, mock_text_extractor):
     response = client.post("/extract", files=files)
     
     assert response.status_code == 500
-    assert "Text extraction failed due to an internal error" in response.json()["message"]
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Text extraction failed due to an internal error" in error_data["message"]
+    assert error_data["status_code"] == 500
+    assert error_data["type"] == "internal_server_error"
 
 # Test /analyze endpoint
 def test_analyze_empty_text(client):
     """Test /analyze endpoint with empty text"""
     response = client.post("/analyze", json={"text": ""})
     assert response.status_code == 400
-    assert "must be at least 50 characters long" in response.json()["message"]
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "must be at least 50 characters long" in error_data["message"]
+    assert error_data["status_code"] == 400
+    assert error_data["type"] == "validation_error"
 
 def test_analyze_short_text(client):
     """Test /analyze endpoint with text shorter than 50 characters"""
     response = client.post("/analyze", json={"text": "Short text"})
     assert response.status_code == 400
-    assert "must be at least 50 characters long" in response.json()["message"]
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "must be at least 50 characters long" in error_data["message"]
+    assert error_data["status_code"] == 400
+    assert error_data["type"] == "validation_error"
+
+def test_analyze_whitespace_only_text(client):
+    """Test /analyze endpoint with whitespace-only text"""
+    response = client.post("/analyze", json={"text": "   \n\t   "})
+    assert response.status_code == 400
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "must be at least 50 characters long" in error_data["message"]
 
 def test_analyze_successful_analysis(client, mock_bias_detector):
     """Test successful bias analysis"""
-    # Create mock analysis result - updated to match schema
+    # Create mock analysis result
     mock_result = BiasAnalysisResult(
-        role="Software Developer",  # Added optional field
-        industry="Technology",      # Added optional field
-        bias_score=0.3,            # Can be str or float per schema
-        inclusivity_score=0.8,     # Can be str or float per schema
-        clarity_score=0.9,         # Can be str or float per schema
+        role="Software Developer",
+        industry="Technology",
+        bias_score=0.3,
+        inclusivity_score=0.8,
+        clarity_score=0.9,
         issues=[
             BiasIssue(
                 type=BiasType.GENDER,
@@ -197,29 +228,61 @@ def test_analyze_successful_analysis(client, mock_bias_detector):
     assert data["suggestions"][0]["improved"] == "results-oriented"
     assert data["overall_assessment"] == "The job description has moderate bias issues that should be addressed."
 
-def test_analyze_exception_handling(client, mock_bias_detector):
-    """Test exception handling in analyze endpoint"""
-    # Mock exception during analysis
-    mock_bias_detector.analyze_comprehensive = AsyncMock(side_effect=Exception("Analysis failed"))
+def test_analyze_language_service_unavailable(client, mock_bias_detector):
+    """Test language improvement service unavailable error"""
+    # Mock language service failure
+    mock_bias_detector.analyze_comprehensive = AsyncMock(
+        side_effect=Exception("Language improvement service failed")
+    )
     
     long_text = "We are looking for an aggressive software developer who can work independently and lead our team to success."
     
     response = client.post("/analyze", json={"text": long_text})
     
+    assert response.status_code == 503
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Language improvement service is temporarily unavailable" in error_data["message"]
+    assert error_data["status_code"] == 503
+    assert error_data["type"] == "service_unavailable"
+
+def test_analyze_general_exception_handling(client, mock_bias_detector):
+    """Test general exception handling in analyze endpoint"""
+    # Mock general exception during analysis
+    mock_bias_detector.analyze_comprehensive = AsyncMock(side_effect=Exception("General analysis error"))
+    
+    long_text = "We are looking for a software developer who can work independently and lead our team to success."
+    
+    response = client.post("/analyze", json={"text": long_text})
+    
     assert response.status_code == 500
-    assert "Bias analysis failed due to an internal error" in response.json()["message"]
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Bias analysis failed due to an internal error" in error_data["message"]
+    assert error_data["status_code"] == 500
+    assert error_data["type"] == "internal_server_error"
 
 # Test /analyze-file endpoint
+def test_analyze_file_no_filename(client):
+    """Test /analyze-file endpoint with no filename"""
+    files = {
+        'file': ('', b'some content', 'text/plain')
+    }
+    response = client.post("/analyze-file", files=files)
+    assert response.status_code == 422  # FastAPI validation status code
+    error_data = response.json()
+    assert "detail" in error_data  # FastAPI validation error format
+
 def test_analyze_file_successful(client, mock_text_extractor, mock_bias_detector):
     """Test successful file analysis"""
     # Mock successful extraction
     mock_text_extractor.extract_from_content = AsyncMock(return_value=TextExtractionResponse(
         success=True,
-        extracted_text="We are looking for an aggressive software developer who can work independently and lead our team.",
+        extracted_text="We are looking for an aggressive software developer who can work independently and lead our team to success.",
         file_type="txt"
     ))
     
-    # Mock successful analysis - updated to match schema
+    # Mock successful analysis
     mock_result = BiasAnalysisResult(
         role="Software Developer",
         industry="Technology",
@@ -235,7 +298,7 @@ def test_analyze_file_successful(client, mock_text_extractor, mock_bias_detector
     mock_bias_detector.analyze_comprehensive = AsyncMock(return_value=mock_result)
     
     files = {
-        'file': ('test.txt', b'sample job description content', 'text/plain')
+        'file': ('test.txt', b'We are looking for an aggressive software developer who can work independently and lead our team to success.', 'text/plain')
     }
     response = client.post("/analyze-file", files=files)
     
@@ -261,15 +324,54 @@ def test_analyze_file_extraction_failed(client, mock_text_extractor):
     response = client.post("/analyze-file", files=files)
     
     assert response.status_code == 400
-    assert "Unsupported file type" in response.json()["message"]
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Unsupported file type" in error_data["message"]
 
+def test_analyze_file_short_extracted_text(client, mock_text_extractor):
+    """Test file analysis with extracted text too short"""
+    # Mock extraction that returns short text
+    mock_text_extractor.extract_from_content = AsyncMock(return_value=TextExtractionResponse(
+        success=True,
+        extracted_text="Short",
+        file_type="txt"
+    ))
+    
+    files = {
+        'file': ('test.txt', b'Short', 'text/plain')
+    }
+    response = client.post("/analyze-file", files=files)
+    
+    assert response.status_code == 400
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "must be at least 50 characters long" in error_data["message"]
 
+def test_analyze_file_exception_handling(client, mock_text_extractor, mock_bias_detector):
+    """Test exception handling in analyze-file endpoint"""
+    # Mock successful extraction
+    mock_text_extractor.extract_from_content = AsyncMock(return_value=TextExtractionResponse(
+        success=True,
+        extracted_text="We are looking for an aggressive software developer who can work independently.",
+        file_type="txt"
+    ))
+    
+    # Mock analysis exception
+    mock_bias_detector.analyze_comprehensive = AsyncMock(side_effect=Exception("Analysis failed"))
+    
+    files = {
+        'file': ('test.txt', b'We are looking for an aggressive software developer who can work independently.', 'text/plain')
+    }
+    response = client.post("/analyze-file", files=files)
+    
+    assert response.status_code == 500
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Bias analysis failed due to an internal error" in error_data["message"]  # Match actual error message
 
 # Test error handling functions
 def test_get_error_type():
     """Test the get_error_type function"""
-    from app.main import get_error_type
-    
     assert get_error_type(400) == "validation_error"
     assert get_error_type(401) == "authentication_error"
     assert get_error_type(403) == "permission_error"
@@ -356,7 +458,7 @@ def test_analyze_maximum_length_text(client, mock_bias_detector):
 
 def test_analyze_special_characters(client, mock_bias_detector):
     """Test analyze endpoint with special characters"""
-    special_text = "We are looking for a developer who can handle émojis 😊, unicode characters ñ, and special symbols @#$%^&*()!"
+    special_text = "We are looking for a developer who can handle émojis 😊, unicode characters ñ, and special symbols @#$%^&*()! This text is long enough to pass validation."
     
     mock_result = BiasAnalysisResult(
         role="Developer",
@@ -426,13 +528,13 @@ def test_analyze_response_structure(client, mock_bias_detector):
     )
     mock_bias_detector.analyze_comprehensive = AsyncMock(return_value=mock_result)
     
-    text = "We are looking for an aggressive software developer who can work independently."
+    text = "We are looking for an aggressive software developer who can work independently and effectively contribute to our success."
     response = client.post("/analyze", json={"text": text})
     
     assert response.status_code == 200
     data = response.json()
     
-    # Check all required fields are present (including new optional ones)
+    # Check all required fields are present
     required_fields = [
         "bias_score", "inclusivity_score", "clarity_score", 
         "issues", "suggestions", "seo_keywords", "improved_text", 
@@ -442,7 +544,7 @@ def test_analyze_response_structure(client, mock_bias_detector):
     for field in required_fields:
         assert field in data
     
-    # Check data types - updated for Union[str, float] scores
+    # Check data types
     assert isinstance(data["bias_score"], (int, float, str))
     assert isinstance(data["inclusivity_score"], (int, float, str))
     assert isinstance(data["clarity_score"], (int, float, str))
@@ -518,7 +620,7 @@ def test_analyze_with_string_scores(client, mock_bias_detector):
     )
     mock_bias_detector.analyze_comprehensive = AsyncMock(return_value=mock_result)
     
-    text = "We are looking for an aggressive software developer who can work independently."
+    text = "We are looking for an aggressive software developer who can work independently and contribute effectively."
     response = client.post("/analyze", json={"text": text})
     
     assert response.status_code == 200
@@ -544,7 +646,7 @@ def test_analyze_with_none_optional_fields(client, mock_bias_detector):
     )
     mock_bias_detector.analyze_comprehensive = AsyncMock(return_value=mock_result)
     
-    text = "We are looking for a skilled software developer who can work independently."
+    text = "We are looking for a skilled software developer who can work independently and make meaningful contributions."
     response = client.post("/analyze", json={"text": text})
     
     assert response.status_code == 200
@@ -553,3 +655,72 @@ def test_analyze_with_none_optional_fields(client, mock_bias_detector):
     assert data["industry"] is None
     assert data["improved_text"] is None
     assert data["overall_assessment"] is None
+
+# Test error response structure
+def test_error_response_structure(client):
+    """Test that error responses have correct structure"""
+    response = client.post("/analyze", json={"text": "short"})
+    
+    assert response.status_code == 400
+    error_data = response.json()
+    
+    # Check all error fields are present
+    required_error_fields = ["error", "message", "status_code", "type"]
+    for field in required_error_fields:
+        assert field in error_data
+    
+    # Check data types
+    assert isinstance(error_data["error"], bool)
+    assert isinstance(error_data["message"], str)
+    assert isinstance(error_data["status_code"], int)
+    assert isinstance(error_data["type"], str)
+    
+    # Check values
+    assert error_data["error"] == True
+    assert error_data["status_code"] == 400
+    assert error_data["type"] == "validation_error"
+
+# Test global exception handler
+def test_general_exception_handler(client):
+    """Test the general exception handler"""
+    # This is harder to test directly, but we can test through endpoints
+    # that might raise unexpected exceptions
+    with patch('app.main.text_extractor.extract_from_content', side_effect=RuntimeError("Unexpected runtime error")):
+        files = {
+            'file': ('test.txt', b'sample content', 'text/plain')
+        }
+        response = client.post("/extract", files=files)
+        
+        assert response.status_code == 500
+        error_data = response.json()
+        assert error_data["error"] == True
+        assert "An unexpected error occurred" in error_data["message"] or "Text extraction failed due to an internal error" in error_data["message"]
+        assert error_data["status_code"] == 500
+        assert error_data["type"] == "internal_server_error"
+
+# Test analyze-file with various error scenarios
+def test_analyze_file_with_language_service_error(client, mock_text_extractor, mock_bias_detector):
+    """Test analyze-file with language improvement service error"""
+    # Mock successful extraction
+    mock_text_extractor.extract_from_content = AsyncMock(return_value=TextExtractionResponse(
+        success=True,
+        extracted_text="We are looking for an aggressive software developer who can work independently and lead teams.",
+        file_type="txt"
+    ))
+    
+    # Mock language service failure
+    mock_bias_detector.analyze_comprehensive = AsyncMock(
+        side_effect=Exception("Language improvement service failed")
+    )
+    
+    files = {
+        'file': ('test.txt', b'We are looking for an aggressive software developer who can work independently and lead teams.', 'text/plain')
+    }
+    response = client.post("/analyze-file", files=files)
+    
+    assert response.status_code == 503
+    error_data = response.json()
+    assert error_data["error"] == True
+    assert "Language improvement service is temporarily unavailable" in error_data["message"]
+    assert error_data["status_code"] == 503
+    assert error_data["type"] == "service_unavailable"

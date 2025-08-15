@@ -196,6 +196,27 @@ class LLMService:
 
         **STEP 3: BIAS DETECTION**
 
+        **DO NOT PENALIZE:**
+        - Whatever job role you find above, you must know the basic requirements of that job role. Examples: 
+            - Security guards or police officers needing physical fitness requirements
+            - Janitors or maintenance workers needing ability to lift, bend, or stand for extended periods
+            - Medical roles (doctors, nurses, surgeons) needing clinical confidence, steady hands, or ability to work under pressure
+            - Teachers needing classroom management skills and patience with students
+            - Sales roles needing strong communication and persuasion abilities
+            - Construction workers needing physical strength and safety awareness
+            - Pilots needing excellent vision and quick decision-making skills
+            - Chefs needing ability to work in hot environments and handle kitchen equipment
+            - Customer service roles needing patience and conflict resolution skills
+            - Drivers needing valid license and clean driving record
+            - Accountants needing attention to detail and numerical accuracy
+            - IT roles needing specific technical certifications or programming languages
+            - Healthcare workers needing specific medical certifications and ability to handle bodily fluids
+            - Firefighters needing physical fitness and ability to work in dangerous conditions
+            - Childcare workers needing background checks and patience with children
+        - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
+        - Industry-appropriate requirements
+        - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
+
         Scan for these bias types, considering job relevance. IMPORTANT: Only flag language that EXCLUDES qualified candidates WITHOUT job-related justification:
 
         1. **Gender Bias**: Gendered language not required for job function
@@ -235,6 +256,8 @@ class LLMService:
         - LEGITIMATE: Legal requirements for specific roles (financial, childcare)
 
         7. **Elitism Bias**: Educational or social class assumptions
+        - ONLY flag if the requirement EXCLUDES candidates without a certain level of education or specific institution, AND the requirement is not clearly justified by job duties or legal necessity.
+        - DO NOT FLAG if the text explicitly states that education is "not required", "no high school diploma", "no GED", "no degree", "not necessary", or similar negation.
         - BIASED: "bachelor's degree from top university", "MBA from top business school", "prestigious institution only"
         - IMPROVED: "bachelor's degree", "MBA", "accredited institution"
         - LEGITIMATE: Specific accreditation requirements for professional roles 
@@ -264,32 +287,12 @@ class LLMService:
         - EXCLUSIVE: "must work 24/7", "no accommodations", excessive requirements for entry-level roles
         - INCLUSIVE: "reasonable accommodations available", "flexible schedule considered", specific role needs
 
-        **DO NOT PENALIZE:**
-        - Whatever job role you find above, you must know the basic requirements of that job role. Examples: 
-            - Security guards or police officers needing physical fitness requirements
-            - Janitors or maintenance workers needing ability to lift, bend, or stand for extended periods
-            - Medical roles (doctors, nurses, surgeons) needing clinical confidence, steady hands, or ability to work under pressure
-            - Teachers needing classroom management skills and patience with students
-            - Sales roles needing strong communication and persuasion abilities
-            - Construction workers needing physical strength and safety awareness
-            - Pilots needing excellent vision and quick decision-making skills
-            - Chefs needing ability to work in hot environments and handle kitchen equipment
-            - Customer service roles needing patience and conflict resolution skills
-            - Drivers needing valid license and clean driving record
-            - Accountants needing attention to detail and numerical accuracy
-            - IT roles needing specific technical certifications or programming languages
-            - Healthcare workers needing specific medical certifications and ability to handle bodily fluids
-            - Firefighters needing physical fitness and ability to work in dangerous conditions
-            - Childcare workers needing background checks and patience with children
-        - Standard professional terms: "confident", "independent", "strong", "leadership", "competitive", "dedicated"
-        - Industry-appropriate requirements
-        - Legitimate qualifications: teaching credentials, technical certifications, relevant experience
 
         **STEP 4: SCORING**
 
-        **Bias Score:** Use the best known method to calculate this and by Python programming calculate the value.
+        **Bias Score:**(Consider the severity of issues related to biasness or inclusiveness ) Use the best known method to calculate this and by Python programming calculate the value.
 
-        **Inclusivity Score:** Use the best known method to calculate this and by Python programming calculate the value.
+        **Inclusivity Score:**(Consider the severity of issues related to biasness or inclusiveness) Use the best known method to calculate this and by Python programming calculate the value.
 
         **Clarity Score:** Use the best known method to calculate this and by Python programming calculate the value.
 
@@ -317,7 +320,7 @@ class LLMService:
                     "start_index": 0,
                     "end_index": 10,
                     "severity": "low|medium|high",
-                    "explanation": "why this is biased and not job-relevant in simpler terms "
+                    "explanation": "Explain in simple terms why this phrase may show bias, how it could unfairly exclude certain candidates, and why it might not be directly relevant to the job's core tasks."
                     
                 }}
             ],
@@ -507,6 +510,14 @@ class LLMService:
         #     """
 
         improvement_prompt = f"""
+
+                **CRITICAL JSON FORMATTING RULES:**
+                - Return ONLY valid JSON - no extra text before or after
+                - Ensure all strings are properly quoted
+                - Ensure all JSON objects and arrays are properly closed
+                - Use proper comma separation between all properties
+                - Escape any quotes within string values
+               
                 **At first check that the job description is related to the particular job role and industry and fulfill the requirements of the job description then do the following**
                 
                 Improve the following job description for:
@@ -521,6 +532,7 @@ class LLMService:
                 - Mention the education requirements in the **OUR IDEAL CANDIDATE** section if it is mentioned in the original job description
                 - Add all the skills that are present in the original job description in the **REQUIRED SKILLS** section do not miss any skills that are present in the original job description
                 - If it is mentioned that no experience is needed then add this in the **OUR IDEAL CANDIDATE** section: "No prior experience is required for this role, but relevant skills and enthusiasm are essential."
+                - Add the required experience in the **OUR IDEAL CANDIDATE** section if it is mentioned in the original job description
                 - FLAG LANGUAGE THAT EXCLUDES QUALIFIED CANDIDATES WITHOUT JOB-RELATED JUSTIFICATION
                 - DO NOT FLAG LEGITIMATE PROFESSIONAL REQUIREMENTS (e.g., DDS/DMD for dentists, physical demands for construction roles)
                 - FOR CLARITY ISSUES: Focus on ambiguous eligibility language that obscures pathways for internationally trained professionals
@@ -532,7 +544,8 @@ class LLMService:
                 **Analysis Instructions:**
                 1. Identify job role and industry context first
                 2. Verify if requirements match industry standards (e.g., Colorado dental board for DDS/DMD)
-                3. Only suggest improvements for genuinely problematic language
+                2a.Suggest improvemnts for the clarity and incusivity issues in the original job description
+                3. Suggest improvements for genuinely problematic language
                 4. Maintain professional tone while improving inclusivity
                 5. DO NOT flag or penalize standard professional language unless clearly discriminatory
                 5a. Never flag licensure-mandated terms (e.g., "DDS/DMD", "RN license") as elitism
@@ -542,7 +555,7 @@ class LLMService:
                 
                 **IMPROVED TEXT FORMATTING REQUIREMENTS:**
                 The improved job description must follow this exact structure and format (keep the ** around section headers):
-                **Rewrite the sentences with some diffrent writting style dont just copy the exact sentences in the KEY RESPONSIBILITIES and OUR IDEAL CANDIDATE sections**
+                **Rewrite the sentences with (removing the bias and inclusivity issues) some diffrent writting style dont just copy the exact sentences in the KEY RESPONSIBILITIES and OUR IDEAL CANDIDATE sections**
                 
                 **JOB TITLE:** [Clear, specific job title]
                 
@@ -596,7 +609,7 @@ class LLMService:
                         {{
                             "original": "original phrase",
                             "improved": "improved phrase",
-                            "rationale": "why this is better",
+                            "rationale": "The actual reason why this is better",
                             "category": "clarity|inclusivity"
                         }}
                     ],

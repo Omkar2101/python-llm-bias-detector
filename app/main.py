@@ -317,17 +317,20 @@ async def analyze_bias(request: AnalyzeRequest):
         result = await bias_detector.analyze_comprehensive(request.text)
         print(f"Analysis result going from /analyze: {result}")  # Debug log
        
-       
-
-        
-
         return result
     except Exception as e:
-        print(f"Unexpected error during bias analysis: {str(e)}")
-        raise HTTPException(
-            status_code=500, 
-            detail="Bias analysis failed due to an internal error"
-        )
+        error_msg = str(e)
+        if "Language improvement service failed" in error_msg:
+            raise HTTPException(
+                status_code=503,  # Service Unavailable
+                detail="Language improvement service is temporarily unavailable. Please try again later."
+            )
+        else:
+            print(f"Unexpected error during bias analysis: {error_msg}")
+            raise HTTPException(
+                status_code=500, 
+                detail="Bias analysis failed due to an internal error"
+            )
 
 @app.post("/analyze-file")
 async def analyze_uploaded_file(file: UploadFile = File(...)):

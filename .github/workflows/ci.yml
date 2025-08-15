@@ -9,9 +9,9 @@ name: Continuous Integration (CI)
 # - Pull requests targeting these branches
 on:
   push:
-    branches: [  main, improvedjob ]
+    branches: [  main, improvedjob,issuechk ]
   pull_request:
-    branches: [  main, improvedjob ]
+    branches: [  main, improvedjob,issuechk ]
 
 jobs:
   # Main CI job that runs code quality checks and tests
