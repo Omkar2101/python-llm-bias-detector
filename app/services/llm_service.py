@@ -555,7 +555,7 @@ class LLMService:
                 
                 **IMPROVED TEXT FORMATTING REQUIREMENTS:**
                 The improved job description must follow this exact structure and format (keep the ** around section headers):
-                **Rewrite the sentences with some diffrent writting style dont just copy the exact sentences in the KEY RESPONSIBILITIES and OUR IDEAL CANDIDATE sections**
+                **Rewrite the sentences with (removing the bias and inclusivity issues) some diffrent writting style dont just copy the exact sentences in the KEY RESPONSIBILITIES and OUR IDEAL CANDIDATE sections**
                 
                 **JOB TITLE:** [Clear, specific job title]
                 
