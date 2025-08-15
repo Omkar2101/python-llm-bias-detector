@@ -292,7 +292,7 @@ class LLMService:
 
         **Bias Score:**(Consider the severity of issues related to biasness or inclusiveness ) Use the best known method to calculate this and by Python programming calculate the value.
 
-        **Inclusivity Score:**(Consider the severity of issues related to biasness aor inclusiveness) Use the best known method to calculate this and by Python programming calculate the value.
+        **Inclusivity Score:**(Consider the severity of issues related to biasness or inclusiveness) Use the best known method to calculate this and by Python programming calculate the value.
 
         **Clarity Score:** Use the best known method to calculate this and by Python programming calculate the value.
 
