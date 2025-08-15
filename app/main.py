@@ -16,6 +16,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Add CORS middleware - Allow All Origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Set to False when using allow_origins=["*"]
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize services
 text_extractor = TextExtractor()
