@@ -1,5 +1,4 @@
 
-
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 import json
@@ -17,9 +16,12 @@ def llm_service():
 
 @pytest.fixture
 def mock_gemini_response():
-    """Mock Gemini API response"""
+    """Mock Gemini API response with candidates structure"""
     mock_response = MagicMock()
-    mock_response.text = '''```json
+    mock_candidate = MagicMock()
+    mock_content = MagicMock()
+    mock_part = MagicMock()
+    mock_part.text = '''
     {
         "role": "Software Engineer",
         "industry": "Technology",
@@ -30,16 +32,18 @@ def mock_gemini_response():
                 "start_index": 50,
                 "end_index": 71,
                 "severity": "medium",
-                "explanation": "Gendered language that may discourage female applicants",
-                "job_relevance": "Assertiveness can be described in neutral terms"
+                "explanation": "This violates NYHRL (New York Human Rights Law) Section 296(1)(a) which prohibits gender-based discrimination in employment"
             }
         ],
         "bias_score": 0.2,
-        "inclusivity_score": 0.85,
+        "inclusivity_score": 0.8,
         "clarity_score": 0.9,
         "overall_assessment": "Low bias detected with minor language improvements needed"
     }
-    ```'''
+    '''
+    mock_content.parts = [mock_part]
+    mock_candidate.content = mock_content
+    mock_response.candidates = [mock_candidate]
     return mock_response
 
 
@@ -47,7 +51,10 @@ def mock_gemini_response():
 def mock_gemini_na_response():
     """Mock Gemini API N/A response for non-job text"""
     mock_response = MagicMock()
-    mock_response.text = '''```json
+    mock_candidate = MagicMock()
+    mock_content = MagicMock()
+    mock_part = MagicMock()
+    mock_part.text = '''
     {
         "role": "N/A",
         "industry": "N/A",
@@ -57,7 +64,10 @@ def mock_gemini_na_response():
         "clarity_score": "N/A",
         "overall_assessment": "The provided text does not appear to be a job description."
     }
-    ```'''
+    '''
+    mock_content.parts = [mock_part]
+    mock_candidate.content = mock_content
+    mock_response.candidates = [mock_candidate]
     return mock_response
 
 
@@ -65,7 +75,10 @@ def mock_gemini_na_response():
 def mock_improvement_response():
     """Mock Gemini API improvement response"""
     mock_response = MagicMock()
-    mock_response.text = '''```json
+    mock_candidate = MagicMock()
+    mock_content = MagicMock()
+    mock_part = MagicMock()
+    mock_part.text = '''
     {
         "suggestions": [
             {
@@ -78,13 +91,16 @@ def mock_improvement_response():
                 "original": "young team",
                 "improved": "dynamic team",
                 "rationale": "Removes age bias while maintaining positive tone",
-                "category": "bias|inclusivity"
+                "category": "inclusivity"
             }
         ],
         "seo_keywords": ["software engineer", "python developer", "remote work", "tech stack", "agile"],
         "improved_text": "**JOB TITLE:** Senior Software Engineer\\n\\n**COMPANY:** Tech Solutions Inc\\n\\n**INDUSTRY:** Technology/Software Development\\n\\n**LOCATION:** Remote/Hybrid\\n\\n**EMPLOYMENT TYPE:** Full-time\\n\\n**JOB SUMMARY:**\\nJoin our dynamic team as a Senior Software Engineer where you'll develop cutting-edge applications."
     }
-    ```'''
+    '''
+    mock_content.parts = [mock_part]
+    mock_candidate.content = mock_content
+    mock_response.candidates = [mock_candidate]
     return mock_response
 
 
@@ -92,13 +108,27 @@ def mock_improvement_response():
 def mock_improvement_na_response():
     """Mock Gemini API N/A improvement response"""
     mock_response = MagicMock()
-    mock_response.text = '''```json
+    mock_candidate = MagicMock()
+    mock_content = MagicMock()
+    mock_part = MagicMock()
+    mock_part.text = '''
     {
         "suggestions": [],
         "improved_text": "N/A - The provided text does not appear to be a job description or does not contain sufficient job-related information to generate an improved version.",
         "seo_keywords": []
     }
-    ```'''
+    '''
+    mock_content.parts = [mock_part]
+    mock_candidate.content = mock_content
+    mock_response.candidates = [mock_candidate]
+    return mock_response
+
+
+@pytest.fixture
+def mock_empty_response():
+    """Mock empty response from Gemini API"""
+    mock_response = MagicMock()
+    mock_response.candidates = []
     return mock_response
 
 
@@ -120,7 +150,7 @@ class TestDetectBias:
         assert isinstance(result["issues"], list)
         assert len(result["issues"]) == 1
         assert result["bias_score"] == 0.2
-        assert result["inclusivity_score"] == 0.85
+        assert result["inclusivity_score"] == 0.8
         assert result["clarity_score"] == 0.9
         assert "Low bias detected" in result["overall_assessment"]
         
@@ -131,6 +161,7 @@ class TestDetectBias:
         assert issue["severity"] == "medium"
         assert issue["start_index"] == 50
         assert issue["end_index"] == 71
+        assert "NYHRL" in issue["explanation"]
     
     
     @pytest.mark.asyncio
@@ -155,7 +186,10 @@ class TestDetectBias:
     async def test_detect_bias_json_without_markdown(self, llm_service):
         """Test JSON response without markdown formatting"""
         mock_response = MagicMock()
-        mock_response.text = '''
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = '''
         {
             "role": "Developer",
             "industry": "Tech",
@@ -166,6 +200,9 @@ class TestDetectBias:
             "overall_assessment": "Clean job description"
         }
         '''
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
         llm_service.model.generate_content = MagicMock(return_value=mock_response)
         
         text = "Looking for a qualified developer"
@@ -177,10 +214,30 @@ class TestDetectBias:
     
     
     @pytest.mark.asyncio
+    async def test_detect_bias_empty_response_error(self, llm_service, mock_empty_response):
+        """Test handling of empty response"""
+        llm_service.model.generate_content = MagicMock(return_value=mock_empty_response)
+        
+        text = "Test job description"
+        
+        with pytest.raises(HTTPException) as exc_info:
+            await llm_service.detect_bias(text)
+        
+        assert exc_info.value.status_code == 500
+        assert "AI analysis failed" in exc_info.value.detail
+
+
+    @pytest.mark.asyncio
     async def test_detect_bias_malformed_json_error(self, llm_service):
         """Test handling of malformed JSON response"""
         mock_response = MagicMock()
-        mock_response.text = "This is not valid JSON"
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = "This is not valid JSON"
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
         llm_service.model.generate_content = MagicMock(return_value=mock_response)
         
         text = "Test job description"
@@ -271,7 +328,10 @@ class TestImproveLanguage:
         llm_service.model.generate_content = MagicMock(return_value=mock_improvement_response)
         
         text = "We need aggressive young professionals for our team"
-        result = await llm_service.improve_language(text)
+        detected_issues = [
+            {"type": "gender", "text": "aggressive personality", "severity": "medium", "explanation": "Gendered language"}
+        ]
+        result = await llm_service.improve_language(text, detected_issues)
         
         # Verify the result structure matches expected format
         assert isinstance(result, dict)
@@ -311,7 +371,10 @@ class TestImproveLanguage:
     async def test_improve_language_json_without_markdown(self, llm_service):
         """Test JSON response without markdown formatting"""
         mock_response = MagicMock()
-        mock_response.text = '''
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = '''
         {
             "suggestions": [
                 {
@@ -325,6 +388,9 @@ class TestImproveLanguage:
             "improved_text": "**JOB TITLE:** Software Developer"
         }
         '''
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
         llm_service.model.generate_content = MagicMock(return_value=mock_response)
         
         text = "Looking for a developer"
@@ -336,10 +402,30 @@ class TestImproveLanguage:
     
     
     @pytest.mark.asyncio
+    async def test_improve_language_empty_response_error(self, llm_service, mock_empty_response):
+        """Test handling of empty response"""
+        llm_service.model.generate_content = MagicMock(return_value=mock_empty_response)
+        
+        text = "Test job description"
+        
+        with pytest.raises(HTTPException) as exc_info:
+            await llm_service.improve_language(text)
+        
+        assert exc_info.value.status_code == 500
+        assert "AI analysis failed" in exc_info.value.detail
+
+
+    @pytest.mark.asyncio
     async def test_improve_language_malformed_json_error(self, llm_service):
         """Test handling of malformed JSON response"""
         mock_response = MagicMock()
-        mock_response.text = "Invalid JSON response"
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = "Invalid JSON response"
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
         llm_service.model.generate_content = MagicMock(return_value=mock_response)
         
         text = "Test job description"
@@ -430,14 +516,17 @@ class TestInitialization:
     @patch('app.services.llm_service.os.getenv')
     def test_initialization_success(self, mock_getenv, mock_model, mock_configure, mock_load_dotenv):
         """Test successful initialization"""
-        mock_getenv.return_value = "test_api_key"
+        mock_getenv.side_effect = lambda key, default=None: {
+            "GOOGLE_GEMINI_API_KEY": "test_api_key",
+            "GOOGLE_GEMINI_MODEL": "gemini-2.0-flash"
+        }.get(key, default)
         
         service = LLMService()
         
         # Verify initialization calls
         mock_load_dotenv.assert_called_once()
         mock_configure.assert_called_once_with(api_key="test_api_key")
-        mock_model.assert_called_once_with('gemini-2.0-flash')
+        mock_model.assert_called_once_with("gemini-2.0-flash")
         assert service.model is not None
     
     
@@ -447,14 +536,16 @@ class TestInitialization:
     @patch('app.services.llm_service.os.getenv')
     def test_initialization_with_none_api_key(self, mock_getenv, mock_model, mock_configure, mock_load_dotenv):
         """Test initialization with None API key"""
-        mock_getenv.return_value = None
+        mock_getenv.side_effect = lambda key, default=None: {
+            "GOOGLE_GEMINI_MODEL": "gemini-2.0-flash"
+        }.get(key, default)
         
         service = LLMService()
         
         # Should still initialize even with None API key
         mock_load_dotenv.assert_called_once()
         mock_configure.assert_called_once_with(api_key=None)
-        mock_model.assert_called_once_with('gemini-2.0-flash')
+        mock_model.assert_called_once_with("gemini-2.0-flash")
 
 
 class TestJsonParsing:
@@ -464,7 +555,10 @@ class TestJsonParsing:
     async def test_detect_bias_json_with_extra_whitespace(self, llm_service):
         """Test JSON parsing with extra whitespace"""
         mock_response = MagicMock()
-        mock_response.text = '''   ```json
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = '''   ```json
         
         {
             "role": "Engineer",
@@ -477,6 +571,9 @@ class TestJsonParsing:
         }
         
         ```   '''
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
         llm_service.model.generate_content = MagicMock(return_value=mock_response)
         
         text = "Test job description"
@@ -490,13 +587,19 @@ class TestJsonParsing:
     async def test_improve_language_json_with_escaped_newlines(self, llm_service):
         """Test JSON parsing with escaped newlines in improved_text"""
         mock_response = MagicMock()
-        mock_response.text = '''```json
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = '''```json
         {
             "suggestions": [],
             "seo_keywords": ["test"],
             "improved_text": "**JOB TITLE:** Test\\n\\n**COMPANY:** Test Corp\\n\\n**LOCATION:** Remote"
         }
         ```'''
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
         llm_service.model.generate_content = MagicMock(return_value=mock_response)
         
         text = "Test job description"
@@ -504,3 +607,65 @@ class TestJsonParsing:
         
         assert "**JOB TITLE:** Test" in result["improved_text"]
         assert "**COMPANY:** Test Corp" in result["improved_text"]
+
+
+class TestRegexFallback:
+    """Test regex fallback for JSON parsing"""
+    
+    @pytest.mark.asyncio
+    async def test_detect_bias_regex_fallback(self, llm_service):
+        """Test regex fallback when JSON parsing fails initially"""
+        mock_response = MagicMock()
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = '''Some text before JSON
+        {
+            "role": "Engineer",
+            "industry": "Tech",
+            "issues": [],
+            "bias_score": 0.0,
+            "inclusivity_score": 1.0,
+            "clarity_score": 1.0,
+            "overall_assessment": "Clean"
+        }
+        Some text after JSON'''
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
+        llm_service.model.generate_content = MagicMock(return_value=mock_response)
+        
+        text = "Test job description"
+        result = await llm_service.detect_bias(text)
+        
+        assert result["role"] == "Engineer"
+        assert result["industry"] == "Tech"
+        assert result["bias_score"] == 0.0
+    
+    
+    @pytest.mark.asyncio
+    async def test_improve_language_regex_fallback(self, llm_service):
+        """Test regex fallback for improve_language method"""
+        mock_response = MagicMock()
+        mock_candidate = MagicMock()
+        mock_content = MagicMock()
+        mock_part = MagicMock()
+        mock_part.text = '''Text before
+        {
+            "suggestions": [{"original": "test", "improved": "better", "rationale": "clearer", "category": "clarity"}],
+            "seo_keywords": ["keyword1"],
+            "improved_text": "**JOB TITLE:** Test Job"
+        }
+        Text after'''
+        mock_content.parts = [mock_part]
+        mock_candidate.content = mock_content
+        mock_response.candidates = [mock_candidate]
+        llm_service.model.generate_content = MagicMock(return_value=mock_response)
+        
+        text = "Test job description"
+        result = await llm_service.improve_language(text)
+        
+        assert len(result["suggestions"]) == 1
+        assert result["suggestions"][0]["original"] == "test"
+        assert len(result["seo_keywords"]) == 1
+        assert result["improved_text"] == "**JOB TITLE:** Test Job"
