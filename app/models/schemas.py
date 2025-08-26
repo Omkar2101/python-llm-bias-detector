@@ -3,22 +3,18 @@ from typing import List, Optional,Union
 from enum import Enum
 
 class BiasType(str, Enum):
-    GENDER = "gender"
     AGE = "age"
-    RACIAL = "racial"
-    CULTURAL = "cultural"
+    AGE_DISCLOSURE = "age_disclosure"
+    RACE_NATIONAL_ORIGIN = "race_national_origin"
+    GENDER = "gender"
+    SEXUAL_ORIENTATION_GENDER_IDENTITY = "sexual_orientation_gender_identity"
     DISABILITY = "disability"
-    RELIGION = "religion",
-    AGE_DISCLOSURE = "age_disclosure"  # Added based on LLM response
-    SOCIOECONOMIC = "socioeconomic"
-    PHYSICAL = "physical"
-    LEGAL = "legal"  # Added based on LLM response
-    CLARITY = "clarity"        # Added - missing from original
-    INCLUSIVITY = "inclusivity"  # Added - missing from original
-    LGBTQ = "lgbtq"
-    FORMER_FELONS = "former_felons"
-    ELITISM = "elitism"
-    MENTAL_HEALTH = "mental_health"
+    PREGNANCY = "pregnancy"
+    CRIMINAL_HISTORY = "criminal_history"
+    RELIGION = "religion"
+    HARASSMENT_LANGUAGE = "harassment_language"
+    RETALIATION_RISK = "retaliation_risk"
+    CLARITY = "clarity"
 
 
 class SeverityLevel(str, Enum):

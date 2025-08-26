@@ -21,6 +21,9 @@ class BiasDetector:
             
             print(f"LLM bias result: {llm_bias_result}")  # Debug log
 
+             # Combine rule-based and LLM results
+            all_issues = self._parse_llm_issues(llm_bias_result.get('issues', []))
+
             
         except Exception as e:
             print(f"Error in LLM bias detection: {e}")
@@ -36,7 +39,17 @@ class BiasDetector:
         
         try:
             # Get LLM analysis for language improvement
-            llm_improvement_result = await self.llm_service.improve_language(text)
+            # Convert BiasIssue objects to dictionaries for the LLM prompt
+            issues_for_llm = []
+            for issue in all_issues:
+                issues_for_llm.append({
+                    "type": issue.type.value if hasattr(issue.type, 'value') else str(issue.type),
+                    "text": issue.text,
+                    "severity": issue.severity.value if hasattr(issue.severity, 'value') else str(issue.severity),
+                    "explanation": issue.explanation
+                })
+            
+            llm_improvement_result = await self.llm_service.improve_language(text, issues_for_llm)
             # print(f"LLM improve result: {llm_improvement_result}")  # Debug log
         except Exception as e:
             print(f"Error in LLM improvement: {e}")
@@ -52,8 +65,7 @@ class BiasDetector:
             print("Improved text generation failed, aborting analysis")
             raise Exception("Language improvement service failed - cannot complete analysis")
         
-        # Combine rule-based and LLM results
-        all_issues = self._parse_llm_issues(llm_bias_result.get('issues', []))
+       
         # rule_based_issues = self._detect_rule_based_bias(text)
         # all_issues.extend(rule_based_issues)
         
