@@ -292,6 +292,37 @@ class LLMService:
         #     "clarity_score": "N/A",
         #     "overall_assessment": "The provided text does not appear to be a job description."
         # }}
+
+
+        # 4. **Severity Guidelines**:
+        # Apply the following strictly:
+        # - **High Severity (0.8 weight):**
+        #     - Direct exclusion/discrimination against a protected class  
+        #     (e.g., “Lady Guard”, gender-based physical/height requirements,  
+        #     “under 35 only”, “must be single”, “native English speaker only”).  
+        #     - Explicit age/sex restrictions not tied to clear BFOQ.  
+        #     - Blanket bans (e.g., “no disabilities”, “must be Christian”).  
+        #     - Language likely unlawful under NYHRL §296 or CADA.  
+
+        # - **Medium Severity (0.4 weight):**
+        #     - Indirect discouraging language, but not outright exclusion  
+        #     (e.g., “young & energetic”, “digital native”, “recent graduate”).  
+        #     - Requirements that may disadvantage groups without being explicit  
+        #     (e.g., “cultural fit”, unnecessary degree inflation).  
+        #     - Ambiguity that creates potential bias but not categorical.  
+
+        # - **Low Severity (0.1 weight):**
+        #     - Minor wording issues that may subtly impact inclusivity  
+        #     (e.g., “guys”, “chairman”, “he/she” instead of neutral pronouns).  
+        #     - Jargon or clarity problems not tied to protected class.  
+        #     - Easily correctable without strong legal risk.  
+
+
+        # 5. **Scoring (Normalized 0.0–1.0):**
+        # - Each issue has a base severity weight: High=0.8, Medium=0.4, Low=0.1.
+        # - **Bias Score** = min(1.0, sum(weights) / max_possible).(**Only consider severity of Bias issues for calculation**) Normalize so the score always lies between 0.0 and 1.0.
+        # - **Inclusivity Score** = 1.0 - Bias Score (but never below 0.0).
+        # - **Clarity Score** = 1.0 if no genuine comprehension blockers; deduct proportionally but keep within 0.0–1.0.(**Only consider severity of Clarity issues for calculation**)
         # """
         bias_detection_prompt = f"""
 
@@ -335,31 +366,46 @@ class LLMService:
         Apply the following strictly:
         - **High Severity (0.8 weight):**
             - Direct exclusion/discrimination against a protected class  
-            (e.g., “Lady Guard”, gender-based physical/height requirements,  
-            “under 35 only”, “must be single”, “native English speaker only”).  
+            (e.g., "Lady Guard", gender-based physical/height requirements,  
+            "under 35 only", "must be single", "native English speaker only").  
             - Explicit age/sex restrictions not tied to clear BFOQ.  
-            - Blanket bans (e.g., “no disabilities”, “must be Christian”).  
+            - Blanket bans (e.g., "no disabilities", "must be Christian").  
             - Language likely unlawful under NYHRL §296 or CADA.  
 
         - **Medium Severity (0.4 weight):**
             - Indirect discouraging language, but not outright exclusion  
-            (e.g., “young & energetic”, “digital native”, “recent graduate”).  
+            (e.g., "young & energetic", "digital native", "recent graduate").  
             - Requirements that may disadvantage groups without being explicit  
-            (e.g., “cultural fit”, unnecessary degree inflation).  
+            (e.g., "cultural fit", unnecessary degree inflation).  
             - Ambiguity that creates potential bias but not categorical.  
 
         - **Low Severity (0.1 weight):**
             - Minor wording issues that may subtly impact inclusivity  
-            (e.g., “guys”, “chairman”, “he/she” instead of neutral pronouns).  
+            (e.g., "guys", "chairman", "he/she" instead of neutral pronouns).  
             - Jargon or clarity problems not tied to protected class.  
             - Easily correctable without strong legal risk.  
 
-
         5. **Scoring (Normalized 0.0–1.0):**
-        - Each issue has a base severity weight: High=0.8, Medium=0.4, Low=0.1.
-        - **Bias Score** = min(1.0, sum(weights) / max_possible).(**Only consider severity of Bias issues for calculation**) Normalize so the score always lies between 0.0 and 1.0.
-        - **Inclusivity Score** = 1.0 - Bias Score (but never below 0.0).
-        - **Clarity Score** = 1.0 if no genuine comprehension blockers; deduct proportionally but keep within 0.0–1.0.(**Only consider severity of Clarity issues for calculation**)
+        Each issue has a base severity weight: High=0.8, Medium=0.4, Low=0.1.
+        
+        **Max Possible Values for Normalization:**
+        - Simple JD (1-2 pages): 2.0
+        - Standard JD (2-3 pages): 3.0  
+        - Complex JD (3+ pages): 4.0
+        
+        **Bias Score Calculation:**
+        - Only consider bias issues: age, race, gender, sexual_orientation, disability, pregnancy, criminal_history, religion, harassment, retaliation
+        - Formula: min(1.0, sum(bias issue weights) / max_possible)
+        - Normalize so score always lies between 0.0 and 1.0
+        
+        **Inclusivity Score Calculation:**
+        - Formula: max(0.0, 1.0 - Bias Score)
+        - Never below 0.0
+        
+        **Clarity Score Calculation:**
+        - Only consider clarity issues  
+        - Formula: max(0.0, 1.0 - sum(clarity issue weights) / max_possible_clarity)
+        - Deduct proportionally but keep within 0.0–1.0 range
 
         ### Output JSON:
         If job description:
