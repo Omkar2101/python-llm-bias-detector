@@ -15,13 +15,13 @@ class LLMService:
 
        
 
-        model_name = os.getenv("GOOGLE_GEMINI_MODEL", "gemini-2.0-flash") 
+        # model_name = os.getenv("gemini-2.5-flash") 
         
 
         # Configure Google Gemini
         genai.configure(api_key=os.getenv("GOOGLE_GEMINI_API_KEY"))
         # self.model = genai.GenerativeModel('gemini-2.5-flash')
-        self.model = genai.GenerativeModel(model_name)
+        self.model = genai.GenerativeModel("gemini-2.5-flash")
     
     async def detect_bias(self, text: str) -> Dict:
         """Use Gemini to detect bias in job description"""
@@ -358,9 +358,10 @@ class LLMService:
             - **Criminal History**: blanket bans unrelated to role.  
             - **Religion**: required faith/holiday assumptions (unless religious org).  
             - **Harassment/Retaliation**: hostile/discouraging language.  
-            - **Clarity**: contradictory (e.g. entry-level w/10 yrs exp), missing essentials, jargon not standard.  
+            - **Clarity**:Focus clarity assessment on genuinely confusing/complicated terms only, contradictory (e.g. entry-level w/10 yrs exp), missing essentials, jargon not standard.  
         - **Do NOT flag**: legal certifications, true BFOQ (safety, law), professional skills, soft skills (teamwork, communication).
         - Inclusivity indicators (reduce bias): "all levels welcome", "EOE", "diverse backgrounds encouraged", accommodations.
+        - Aggregate identical issues - report each unique phrase only once
 
         4. **Severity Guidelines**:
         Apply the following strictly:
@@ -406,6 +407,7 @@ class LLMService:
         - Only consider clarity issues  
         - Formula: max(0.0, 1.0 - sum(clarity issue weights) / max_possible_clarity)
         - Deduct proportionally but keep within 0.0–1.0 range
+
 
         ### Output JSON:
         If job description:

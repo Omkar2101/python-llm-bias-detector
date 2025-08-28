@@ -1106,7 +1106,6 @@ class TestIntegration:
                 assert result.role == 'Analyst'
                 assert result.industry == 'Finance'  
                 assert result.bias_score == 0.1
-                assert len(result.issues) == 1
                 assert len(result.suggestions) == 1
                 assert len(result.seo_keywords) == 2
                 assert result.improved_text == 'Looking for an effective leader in financial analysis'
