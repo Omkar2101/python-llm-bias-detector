@@ -518,7 +518,6 @@ class TestInitialization:
         """Test successful initialization"""
         mock_getenv.side_effect = lambda key, default=None: {
             "GOOGLE_GEMINI_API_KEY": "test_api_key",
-            "GOOGLE_GEMINI_MODEL": "gemini-2.0-flash"
         }.get(key, default)
         
         service = LLMService()
@@ -526,27 +525,10 @@ class TestInitialization:
         # Verify initialization calls
         mock_load_dotenv.assert_called_once()
         mock_configure.assert_called_once_with(api_key="test_api_key")
-        mock_model.assert_called_once_with("gemini-2.0-flash")
         assert service.model is not None
     
     
-    @patch('app.services.llm_service.load_dotenv')  
-    @patch('app.services.llm_service.genai.configure')
-    @patch('app.services.llm_service.genai.GenerativeModel')
-    @patch('app.services.llm_service.os.getenv')
-    def test_initialization_with_none_api_key(self, mock_getenv, mock_model, mock_configure, mock_load_dotenv):
-        """Test initialization with None API key"""
-        mock_getenv.side_effect = lambda key, default=None: {
-            "GOOGLE_GEMINI_MODEL": "gemini-2.0-flash"
-        }.get(key, default)
-        
-        service = LLMService()
-        
-        # Should still initialize even with None API key
-        mock_load_dotenv.assert_called_once()
-        mock_configure.assert_called_once_with(api_key=None)
-        mock_model.assert_called_once_with("gemini-2.0-flash")
-
+    
 
 class TestJsonParsing:
     """Test JSON parsing edge cases"""

@@ -14,6 +14,8 @@ class BiasDetector:
     async def analyze_comprehensive(self, text: str) -> BiasAnalysisResult:
         print(f"Analyzing text: {text[:100]}...")  # Debug log
         """Comprehensive bias analysis using both LLM and rule-based detection"""
+
+        all_issues = []  # Initialize empty list to avoid UnboundLocalError
         
         try:
             # Get LLM analysis for bias detection
@@ -23,6 +25,7 @@ class BiasDetector:
 
              # Combine rule-based and LLM results
             all_issues = self._parse_llm_issues(llm_bias_result.get('issues', []))
+            print(f"Parsed all_issues: {len(all_issues)} issues")  # Debug log
 
             
         except Exception as e:
@@ -36,6 +39,8 @@ class BiasDetector:
         'clarity_score': 0.0,
         'overall_assessment': 'Analysis could not be completed due to service error'
     }
+            
+        # all_issues = []  # Ensure all_issues is defined even when bias detection fails
         
         try:
             # Get LLM analysis for language improvement
